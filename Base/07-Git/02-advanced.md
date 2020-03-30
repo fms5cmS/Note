@@ -210,14 +210,14 @@ merge 操作最后得到的结果通过 `gitk` 可以看到当前的 commit 有�
 # 用户 1 clone 远端内容
 git clone 远端地址 # 这里默认的远端地址为 origin ！
 # 基于远端分支创建本地分支 user1
-git branch -b user1 origin/feature/change_base_info
+git checkout -b user1 origin/feature/change_base_info
 
 # 用户 2 与远端仓库建立关联并命名为 github1
 git remote add github1 远端地址
 # 拉取远端内容
 git fetch github1
 # 基于远端分支创建本地分支 user2，注意，两个用户要基于相同的远程分支来创建本地分支！
-git branch -b user2 github1/feature/change_base_info
+git checkout -b user2 github1/feature/change_base_info
 ```
 
 ## 多人修改了不同文件
