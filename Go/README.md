@@ -284,6 +284,25 @@ Go modules 在主版本号为 v0 和 v1 的情况下省略了版本号(强制性
 | v1.0.0 | github.com/eddycjy/mquote    |
 | v2.0.0 | github.com/eddycjy/mquote/v2 |
 
+# 内存对齐
+
+[图解 Go 内存对齐](https://www.bilibili.com/video/BV1iZ4y1j7TT)
+
+[在 Go 中恰到好处的内存对齐](https://segmentfault.com/a/1190000017527311)
+
+数据结构对齐工具：
+
+```shell
+# layout
+go get github.com/ajstarks/svgo/structlayout-svg
+go get -u honnef.co/go/tools
+go install honnef.co/go/tools/cmd/structlayout
+go install honnef.co/go/tools/cmd/structlayout-pretty
+
+# optmize
+go install honnef.co/go/tools/cmd/structlayout-optmize
+```
+
 # Web
 
 Web 部分的内容是学习[Go 语言 Web 应用开发](https://github.com/unknwon/building-web-applications-in-go)的笔记！
