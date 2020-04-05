@@ -8,6 +8,131 @@
    - 设置：GOROOT（Go 的安装目录）、GOPATH、GO111MODULE、GOPROXY、GOBIN 环境变量
 4. 使用 `go version` 验证是否安装成功
 
+# Go 如何组织代码
+
+Go 语言是通过包（目录）来组织代码的。环境变量 GOPATH 指向的目录是工作目录，该变量可以包含多个目录路径，Windows 下，多个值之间使用`;`来分隔，Unix 下，值之间使用`:`分隔。每个路径代表一个工作区（workspace）。工作区下的目录结构：
+
+- src：源码所在的目录，该目录下可以有子目录。
+- pkg：保存归档文件（扩展名为 .a 的文件，即 archive 文件）这是程序编译后生成的静态库文件。
+  - 注意：在 pkg 下实际上还有一个平台相关目录（目标操作系统对应的目录），所有的归档文件都在这个目录下。
+- bin：保存编译后的命令。每个命令都是**使用源文件所在直接目录名命名**的。
+
+## 示例
+
+以下两个文件都是 Windows 系统 GOPATH 下的！
+
+src/foo/bar/x.go：
+
+```go
+package hello  //声明其所属的包
+
+import "fmt" //导入其他的包
+
+func Hello(name string) {  //函数
+  fmt.Printf("Hello %s",name)
+}
+```
+
+src/foo/quux/y.go：
+
+```go
+package main   //命令源码文件必须使用 main 作为包 name
+
+import "foo/bar"  //使用文件所在路径来导入
+
+func main() {
+  hello.Hello("bx") //使用时则根据声明的包来使用！
+}
+```
+
+对以上两个源码文件执行 go install 命令后发现此时 GOPATH 下的目录结构为：
+
+```
+src/
+   foo/
+       bar/
+           x.go    库源码文件
+       quux/
+           y.go    命令源码文件
+bin/
+   quux       可执行文件。注意：这里并没有 foo 目录！且使用源文件所在的直接目录来命名
+pkg/
+   windows_amd64/        这是一个与平台相关的目录，即操作系统对应的目录
+       foo/
+           bar.a
+```
+
+# 源码文件
+
+源码文件分为三种：
+
+- 命令源码文件
+- 库源码文件
+- 测试源码文件
+
+## 命令源码文件
+
+命令源码文件是程序的运行入口，是每个可独立运行的程序必须拥有的。
+
+命令源码文件：**所属包为 main，且包含一个无参数声明且无结果声明的 `main` 函数。**如上面的 y.go 。
+
+**对于一个独立的程序来说，命令源码文件永远只会也只能有一个。**
+
+## 库源码文件
+
+库源码文件不能被直接运行，它仅用于存放程序实体。如上面的 x.go。
+
+## 测试源码文件
+
+Go 有一个轻量级的测试框架，由 `go test` 命令和 testing 包构成。
+
+- 测试文件名以 `_test.go` 结尾。
+- 测试文件内的函数命名方式为 `func TestXXX(t *testing.T)`
+
+# 包名
+
+在 Go 程序中的第一行必须声明程序所在包名：`package name`。
+
+**同一个包内的所有文件必须使用相同的 name。name 一般与源码文件所在的目录同名，可以不同名。**如上面的 x.go 文件所在目录名为 bar，但声明的包名为 hello。
+
+**例外：Go test 支持在同一个目录下使用不同包名，只要包名是以 package_test 形式命名即可。详见 strings 包。**
+
+这里以上面的示例来说明包名的使用：
+
+- 当外部要导入 x.go 文件中的内容（变量、函数等）时，**必须使用 x.go 所在的路径为导入路径**，即 y.go 中的 `import "foo/bar"`
+  - 标准库内包的导入路径是给定了的，如`fmt`、`net/http`。
+  - 对于自定义的包，必须选择一个不会与标准库冲突的基本路径。
+  - 如果你将代码保存在远程的代码仓库，那就必须使用远程仓库作为基本路径
+- y.go 在导入 x.go 之后，如果要使用 x.go 中的内容，**必须通过 `包名.` 的方式来使用**，即 y.go 中通过 `hello.Hello("bx")` 的方式来调用 x.go 的 Hello 函数
+
+# 访问权限
+
+在上面的示例中可以看到，x.go 的 Hello 函数的函数名首字母是大写的，如果改为小写还可以继续在 y.go 中调用吗？答案是不能！
+
+Go 语言中：
+
+**同包下不同文件中的全局资源（全局变量、结构体、函数等无论首字母是否大写）可以随意访问**；
+
+**不同包下资源要想互相访问，必须满足：1. 导入要使用的资源所在的包；2. 该资源的首字母必须大写**。
+
+# build 和 install
+
+install：
+
+- **如果对库源码文件执行 `go install` 命令，产生的结果文件会被放到 GOPATH 下的 pkg 目录下，且文件以源码文件所在的直接目录来命名。**
+
+- - 上面示例中的 x.go 文件，其所在的直接目录为 bar，故生成的结果文件名为 bar
+
+- **如果对命令源码文件执行 `go install` 命令，产生的可执行文件会被放到 GOPATH 下的 bin 目录下，且文件以源码文件所在的直接目录来命名。**
+
+- - **注意，是直接放在 bin 目录下的，而不是在子目录下！！**
+  - 上面示例中的 y.go 文件，位于 foo/quux 下，直接子目录是 quux，所以产生的可执行文件以 quux 命名的，且直接位于 bin 下，而不是 bin/foo 下！
+
+build：
+
+- 对库源码文件执行 `go build` 命令，结果文件只存在于临时目录中（PS：这里似乎无法验证？）；
+- 对命令源码文件执行 `go build` 命令，结果文件会被直接放在与源码文件相同的目录下，即，如果对 y.go 执行 `go build` 命令，产生的可执行文件与 y.go 在同一目录下。
+
 # 部分命令
 
 - 运行：`go run [参数] 命令源码文件.go`
@@ -41,54 +166,6 @@
 1. 下载 golang.org 的包时，golang.org/x/net 对应 GitHub 上的镜像地址为 https://github.com/golang/net
 2. 将其源码 $GOPATH/src/github.com/golang/net 复制到 $GOPATH/src/golang.org/x/
 3. 然后 `go build net`
-
-Q：如何向二进制文件中加入编译时间戳、go 的版本信息？
-
-以 Linux 系统下向编译的二进制文件中添加为例，
-
-```go
-var (
-  // 这三个参数从外部在源码编译时传入
-	buildstamp   = "unknown"
-	gitstatus    = "unknown"
-	gitcommitlog = "unknown"
-	// 这里使用 runtime 包的函数来初始化值，也可以类似 buildstamp 从外部向其传值
-	goversion = fmt.Sprintf("%s %s/%s", runtime.Version(), runtime.GOOS, runtime.GOARCH)
-)
-
-func main() {
-	args := os.Args
-	if len(args) == 2 && (args[1] == "--version" || args[1] == "-v") {
-		fmt.Printf("UTC Build Time : %s\n", buildstamp)
-		fmt.Printf("Git Commit Hash: %s\n", gitstatus)
-		fmt.Printf("Git Commit Hash: %s\n", gitcommitlog)
-		fmt.Printf("Golang Version : %s\n", goversion)
-		return
-	}
-}
-
-```
-
-这里使用一个 shell 脚本来完成程序内部参数赋值及可执行文件的生成：
-
-```shell
-#!/bin/bash
-
-# 获取源码最近一次 git commit log，包含 commit sha 值，以及 commit message
-gitcommitlog=`git log --pretty=oneline -n 1`
-# 检查源码在git commit 基础上，是否有本地修改，且未提交的内容
-gitstatus=`git status -s`
-# 获取当前时间
-buildstamp=`date +'%Y.%m.%d.%H%M%S'`
-
-flags="-X 'main.buildstamp=${buildstamp}' -X 'main.gitstatus=${gitstatus}' -X 'main.gitcommitlog=${gitcommitlog}'"
-# 会生成名为 add_info_to_binaryfile 的可执行文件
-go build -ldflags "${flags}" -x -o add_info_to_binaryfile main.go
-```
-
-执行：`./add_info_to_binaryfile -v` 就可以看到输出了。
-
-详见：[二进制文件加入 Git 版本的坑](https://mp.weixin.qq.com/s/VZXQeEeNNTLJPfS8tJVJZg)
 
 # Go Modules
 
