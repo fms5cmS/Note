@@ -290,32 +290,29 @@ fmt.Printf("%s\n", s)
 如果仅使用 text 库：
 
 ```go
-utf8Reader := transform.NewReader(resp.Body,
-                                  simplifiedchinese.GBK.NewDecoder())
+utf8Reader := transform.NewReader(resp.Body, simplifiedchinese.GBK.NewDecoder())
 all, err := ioutil.ReadAll(utf8Reader)
 ```
 
 这种方式的通用性较差，所以通常会结合 html 库来自动检测 html 文件的编码：
 
 ```go
-//对 charset.DetermineEncoding 进行了包装
+func main()  {
+  // 获取 HTML 的编码
+  e := determineEncoding(resp.Body)
+  // 对 resp.Body 包装，使其读取编码格式为 e.NewDecodeer()
+  htmlReader := transform.NewReader(resp.Body, e.NewDecoder())
+  all, err := ioutil.ReadAll(htmlReader)
+}
+
+// 对 charset.DetermineEncoding 进行了包装，这里通过响应的前 1024 字节来确定编码
 func determineEncoding(r io.Reader) encoding.Encoding {
-	//如果直接从 r 中读取前 1024 bytes 的话，这 1024 bytes 就没办法再读了，所以这里使用 bufio 包装 r 以后 Peek
+	// 如果直接从 r 中读取前 1024 bytes 的话，这 1024 bytes 就没办法再读了，所以这里使用 bufio 包装 r 以后 Peek
 	bytes, err := bufio.NewReader(r).Peek(1024)
 	if err != nil {
 		panic(err)
 	}
 	encoding, _, _ := charset.DetermineEncoding(bytes, "")
 	return encoding
-}
-```
-
-```go
-func main()  {
-  //获取 HTML 的编码，对 charset.DetermineEncoding() 进行了包装，见上面
-  e := determineEncoding(resp.Body)
-  //将其转为 UTF-8
-  utf8Reader := transform.NewReader(resp.Body, e.NewDecoder())
-  all, err := ioutil.ReadAll(utf8Reader)
 }
 ```
