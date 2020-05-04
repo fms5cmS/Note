@@ -2,45 +2,86 @@ Go 语言库常用的一个设计套路：一般来说，一个库实现某个�
 
 # 配置文件相关
 
-[viper](https://github.com/spf13/viper)，支持 JSON, TOML, YAML, HCL, envfile and Java properties 等多种格式的配置文件，但不支持 ini 格式。严格而言，viper 并不解析具体格式，解析的工作根据实际的格式交给对应的库。它最大的好处是为所有支持的格式提供统一的 API，这让使用者不必关心具体是什么格式，同时换配置文件格式代码几乎不用修改。
+[viper](https://github.com/spf13/viper)，支持 JSON, TOML, YAML, HCL, envfile and Java properties 等多种格式的配置文件，但不支持 ini 格式。严格而言，viper 并不解析具体格式，解析的工作根据实际的格式交给对应的库。为所有支持的格式提供统一的 API，这让使用者不必关心具体是什么格式，同时换配置文件格式代码几乎不用修改。
+
+configfile.toml：
+
+```toml
+language = "Go"
+host = "localhost"
+port = 10086
+
+# 个人信息
+[person]
+name = "zzk"
+age = 17
+h = 170
+
+[family]
+address = "sx"
+```
+
+读取配置：
 
 ```go
 type config struct {
-	language string
-	people   person
+	Language string
+	Host     string
+	Port     int
+	People   Person `mapstructure:"Person"`  // 指定内嵌的结构体类型
 }
 
-type person struct {
-	name   string
-	age    int
-	height int
-	weight int
+type Person struct {
+	Name   string
+	Age    int
+	Height int `mapstructure:"h"` // 字段名与配置文件中的 key 不一致时，指定配置文件中的 key
 }
+
+type Family struct {
+	Address string
+}
+
+var v = viper.New()
+
 
 func TestReadConfig(t *testing.T) {
 	// 设置配置文件名，不需要带扩展名，便于在不修改代码的情况下替换配置文件的类型
-	viper.SetConfigName("configfile")
+	v.SetConfigName("configfile")
 	// 设置配置文件类型(可选，viper 会自动判断)
-	viper.SetConfigType("toml")
+	v.SetConfigType("toml")
 	// 可以添加多个配置文件的路径
-	viper.AddConfigPath("../")
+	v.AddConfigPath("../")
+	v.WatchConfig()  // 监控配置文件
+	v.OnConfigChange(func(e fsnotify.Event) {
+		fmt.Println("config file changed: ", e.Name)
+		fill()
+	})
+	fill()
+}
+
+func fill() {
 	// 读取配置文件，会根据不同的文件类型调用不同的解析库进行解析
-	if err := viper.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			panic(fmt.Errorf("Can not find config file"))
 		} else {
 			panic(fmt.Errorf("Fatal error config file: %s", err))
 		}
 	}
-	var cfg config
-	// 将从配置文件中的读取到的配置信息填充到结构体中
-	cfg.language = viper.GetString("language")
-	cfg.people.age = viper.GetInt("person.age")
-	t.Logf("the config is %v", cfg)
-	some := viper.GetStringMap("person")
-	for key, value := range some {
-		t.Logf("%v: %v", key, value)
+	language := v.GetString("language")
+	age := v.GetInt("person.age") // 读取配置文件中的嵌入字段
+	fmt.Printf("language = %d, language = %s\n", age, language)
+	// 将从配置文件中的读取到的配置信息填充到结构体中(含内嵌的结构体！)
+	var conf config
+	if err := v.Unmarshal(&conf); err != nil {
+		panic("error 1")
 	}
+	fmt.Printf("%v\n", conf)
+	var family Family
+	if err := v.UnmarshalKey("family", &family); err != nil {
+		panic("error 2")
+	}
+	fmt.Printf("%v\n", family)
 }
 ```
 
@@ -82,34 +123,11 @@ go get -u github.com/jinzhu/gorm
 go get -t -v github.com/go-sql-driver/mysql/...
 ```
 
-# 生成 API 文档
+```go
 
-[swag](https://github.com/swaggo/swag) 可以自动生成 Restful 风格的 API 文档。支持 Gin、echo、buffalo 框架以及 Go 自带的 net/http 包。
+```
 
-# 定时任务
 
-[robfig/cron](https://github.com/robfig/cron) 实现了 cron 规范解析器和任务运行器，简单来讲就是包含了定时任务所需的功能。
-
-Cron 表达式：`秒 分 时 日 月 周`
-
-| 字段名       | 允许的值        | 允许的特殊字符      |
-| ------------ | --------------- | ------------------- |
-| Seconds      | 0-59            | `,` `-` `*` `/`     |
-| Minutes      | 0-59            | `,` `-` `*` `/`     |
-| Hours        | 0-23            | `,` `-` `*` `/`     |
-| Day-of-Month | 1-31            | `,` `-` `*` `?` `/` |
-| Month        | 1-12 或 JAN-DEC | `,` `-` `*` `/`     |
-| Day-of-Week  | 1-7 或 SUN-SAT  | `,` `-` `*` `?` `/` |
-
-这里的 Cron 比 Linux 中的 Crontab 多了秒，特殊字符：
-
-| 符号  | 含义                                       |
-| ----- | ------------------------------------------ |
-| `*`   | 匹配所有值                                 |
-| `，`  | 指定可选值                                 |
-| `-`   | 指定一个范围                               |
-| `*/n` | 指定增量                                   |
-| `?`   | 不指定值，用于替代 `*`，类似于 Go 中的 `_` |
 
 # 验证
 
@@ -305,3 +323,153 @@ validator 返回的错误实际上只有两种：
 3. `ValidationErrors` 字段违反约束
 
 可以在程序判断 `err != nil` 后，依次将 err 转换为 `InvalidValidationError` 和 `ValidationErrors` 以获取更详细的信息。
+
+# 会话追踪
+
+[gorilla/sessions](http://www.gorillatoolkit.org/pkg/sessions)为自定义session后端提供cookie和文件系统session以及基础结构。
+
+主要功能是：
+
+- 简单的API：将其用作设置签名（以及可选的加密）cookie的简便方法。
+- 内置的后端可将 session 存储在 cookie 或文件系统中。
+- Flash 消息：一直持续读取的 session值。
+- 切换 session 持久性（又称“记住我”）和设置其他属性的便捷方法。
+- 旋转身份验证和加密密钥的机制。
+- 每个请求有多个 session，即使使用不同的后端也是如此。
+- 自定义 sessio n后端的接口和基础结构：可以使用通用 API 检索并批量保存来自不同商店的 session。
+
+```go
+package main
+
+import (
+  "fmt"
+  "net/http"
+  "github.com/gorilla/sessions"
+)
+
+// 初始化一个cookie存储对象
+// something-very-secret应该是一个自己的密匙，只要不被别人知道就行
+var store = sessions.NewCookieStore([]byte("something-very-secret"))
+
+func main() {
+  http.HandleFunc("/save", SaveSession)
+  http.HandleFunc("/get", GetSession)
+  err := http.ListenAndServe(":8080", nil)
+  if err != nil {
+    fmt.Println("HTTP server failed,err:", err)
+    return
+  }
+}
+
+func SaveSession(w http.ResponseWriter, r *http.Request) {
+  //　获取一个session对象，session-name是session的名字
+  session, err := store.Get(r, "session-name")
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+
+  // 在session中存储值
+  session.Values["foo"] = "bar"
+  session.Values[42] = 43
+  // 保存更改
+  session.Save(r, w)
+}
+func GetSession(w http.ResponseWriter, r *http.Request) {
+  session, err := store.Get(r, "session-name")
+  if err != nil {
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+  foo := session.Values["foo"]
+  fmt.Println(foo)
+}
+```
+
+删除 session：
+
+```go
+session.Options.MaxAge = -1
+session.Save(r, w)
+```
+
+# JWT
+
+[JWT](../Base/02-HTTP/HTTP.md#验证-token)作为令牌系统而不是在每次请求时都发送用户名和密码，因此比其他方法（如基本身份验证）具有固有的优势。
+
+```go
+var jwtSecret = []byte("fms5cmS")
+
+// Claims 用于存储数据
+type Claims struct {
+	Username string `json:"username"`
+	Password string `jon:"password"`
+	jwt.StandardClaims
+}
+// Header 部分：alg=HS256、typ=JWT
+// Payload(也叫 Claims)部分：
+//   Registered 部分这里未设置
+//   Public 部分需要额外注册？
+//   Private 部分可以随意定义，这里的两个字段都是 Private 的
+// Signature 部分，防止数据被篡改
+//   注意，该库的 SignedString 方法接收一个 interface{} 类型，但必须是 []byte，否则运行时报错
+func GenerateToken(username, password string) (string, error) {
+	nowTime := time.Now()
+	expireTime := nowTime.Add(3 * time.Hour)
+	claims := Claims{
+		Username: username,
+		Password: password,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expireTime.Unix(),
+			Issuer:    "fms5cmS",
+		},
+	}
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return tokenClaims.SignedString(jwtSecret)
+}
+
+func ParseToken(token string) (*Claims, error) {
+	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		// 对 alg 即签名算法校验
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		return jwtSecret, nil
+	})
+	if tokenClaims != nil {
+		if claims, ok := tokenClaims.Claims.(*Claims); ok && tokenClaims.Valid { // 校验有效性
+			return claims, nil
+		}
+	}
+	return nil, err
+}
+```
+
+# 生成 API 文档
+
+[swag](https://github.com/swaggo/swag) 可以自动生成 Restful 风格的 API 文档。支持 Gin、echo、buffalo 框架以及 Go 自带的 net/http 包。
+
+# 定时任务
+
+[robfig/cron](https://github.com/robfig/cron) 实现了 cron 规范解析器和任务运行器，简单来讲就是包含了定时任务所需的功能。
+
+Cron 表达式：`秒 分 时 日 月 周`
+
+| 字段名       | 允许的值        | 允许的特殊字符      |
+| ------------ | --------------- | ------------------- |
+| Seconds      | 0-59            | `,` `-` `*` `/`     |
+| Minutes      | 0-59            | `,` `-` `*` `/`     |
+| Hours        | 0-23            | `,` `-` `*` `/`     |
+| Day-of-Month | 1-31            | `,` `-` `*` `?` `/` |
+| Month        | 1-12 或 JAN-DEC | `,` `-` `*` `/`     |
+| Day-of-Week  | 1-7 或 SUN-SAT  | `,` `-` `*` `?` `/` |
+
+这里的 Cron 比 Linux 中的 Crontab 多了秒，特殊字符：
+
+| 符号  | 含义                                       |
+| ----- | ------------------------------------------ |
+| `*`   | 匹配所有值                                 |
+| `，`  | 指定可选值                                 |
+| `-`   | 指定一个范围                               |
+| `*/n` | 指定增量                                   |
+| `?`   | 不指定值，用于替代 `*`，类似于 Go 中的 `_` |

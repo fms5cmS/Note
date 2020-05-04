@@ -54,7 +54,7 @@
   2. 从队首开始访问节点，每访问一个节点就将其左右子节点入队，然后将头节点出队；
   3. 队列中为空，则遍历完成。
 
-以上四种遍历方式，其中前三种属于深度优先的遍历，而最后一种则是广度优先的遍历。
+以上四种遍历方式，其中前三种属于深度优先的遍历，而最后一种则是广度优先的遍历。时间复杂度均为 $O(n)$，n为节点数！
 
 广度优先遍历的意义在于可以更快地找到查询地元素。主要用于搜索策略上，而不是这里的遍历上。常用于算法设计中的最短路径问题。
 
@@ -81,6 +81,23 @@ func PreOrderNotRecursion(root *Node) {
 		}
 		if cur.left != nil {
 			stack.Push(cur.left)
+		}
+	}
+}
+// 也可以使用数组模拟栈
+func PreOrderNonRecursion(root *Node) {
+	stack := make([]*Node, 0)
+	stack = append(stack, root) // 根节点入栈
+	for len(stack) > 0 {
+		length := len(stack) - 1
+		cur := stack[length] // 栈顶元素出栈
+		stack = stack[:length] // 更新栈的长度
+		fmt.Print(cur, " ")
+		if cur.right != nil {
+			stack = append(stack, cur.right)
+		}
+		if cur.left != nil {
+			stack = append(stack, cur.left)
 		}
 	}
 }

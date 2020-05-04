@@ -2,24 +2,24 @@ RPC 是远程过程调用的简称，是分布式系统中不同节点间流行�
 
 Go 语言的 RPC 包的路径为 net/rpc。
 
-标准库的 RPC 默认采用 Go 语言特有的 gob 编码，因此从其它语言调用Go语言实现的RPC服务将比较困难。在互联网的微服务时代，每个 RPC 以及服务的使用者都可能采用不同的编程语言，因此跨语言是互联网时代 RPC 的一个首要条件。得益于 RPC 的框架设计，Go语言的 RPC 其实也是很容易实现跨语言支持的。
+标准库的 RPC 默认采用 Go 语言特有的 gob 编码，因此从其它语言调用 Go 语言实现的 RPC 服务将比较困难。在互联网的微服务时代，每个 RPC 以及服务的使用者都可能采用不同的编程语言，因此跨语言是互联网时代 RPC 的一个首要条件。得益于 RPC 的框架设计，Go 语言的 RPC 其实也是很容易实现跨语言支持的。
 
 Go 语言的 RPC 框架有两个比较有特色的设计：一个是 RPC 数据打包时可以通过插件实现自定义的编码和解码；另一个是 RPC 建立在抽象的 `io.ReadWriteCloser` 接口之上的，我们可以将 RPC 架设在不同的通讯协议之上。
 
-
+Go 语言的 RPC 框架支持异步调用，当返回结果的顺序和调用的顺序不一致时，可以通过 id 来识别对应的调用
 
 # 基础
 
 - 定义服务
-  - **Go语言的 RPC 服务的方法只能有两个可序列化的参数，其中第二个参数是指针类型，且返回一个 error 类型，同时必须是公开的方法**
+  - **Go 语言的 RPC 服务的方法只能有两个可序列化的参数，其中第二个参数是指针类型，且返回一个 error 类型，同时必须是公开的方法**
 
 ```go
 type HelloService struct{}
 
-// Go语言的RPC规则：
-// 方法只能有两个可序列化的参数，其中第二个参数是指针类型，且返回一个error类型，同时必须是公开的方法。
+// Go 语言的 RPC 规则：
+// 方法只能有两个可序列化的参数，其中第二个参数是指针类型，且返回一个 error 类型，同时必须是公开的方法。
 func (p *HelloService) Hello(request string, reply *string) error {
-	*reply = "hello" + request
+	*reply = "hello " + request
 	return nil
 }
 ```
@@ -37,12 +37,12 @@ func main() {
 	if err != nil {
 		log.Fatal("ListenTCP error: ", err)
 	}
-
+	// 建立 TCP 连接(这里仅一个)
 	conn, err := listener.Accept()
 	if err != nil {
 		log.Fatal("Accept error: ", err)
 	}
-	// 通过 rpc.ServeConn 函数在该 TCP 链接上为对方提供 RPC 服务
+	// 通过 rpc.ServeConn 函数在该 TCP 连接上为对方提供 RPC 服务
 	rpc.ServeConn(conn)
 }
 ```
@@ -60,8 +60,8 @@ func main() {
   }
 
   var reply string
-  // 调用具体的 RPC 方法，参数分别为：
-  // 用点号链接的 RPC 服务名字和方法名字，传入 RPC 方法的两个参数
+	// 调用具体的 RPC 方法，参数分别为：
+	// RPC服务名.方法名, 传入 RPC 方法的两个参数
   err = client.Call("HelloService.Hello", "Yoshino", &reply)
   if err != nil {
     log.Fatal(err)
@@ -70,11 +70,15 @@ func main() {
 }
 ```
 
-
-
 # 重构
 
-在涉及 RPC 的应用中，作为开发人员一般至少有三种角色：首选是服务端实现 RPC 方法的开发人员，其次是客户端调用 RPC 方法的人员，最后也是最重要的是制定服务端和客户端RPC 接口规范的设计人员。在前面的例子中我们为了简化将以上几种角色的工作全部放到了一起，虽然看似实现简单，但是不利于后期的维护和工作的切割。
+在涉及 RPC 的应用中，作为开发人员一般至少有三种角色：
+
+- 服务端实现 RPC 方法的开发人员
+- 客户端调用 RPC 方法的人员
+- 制定服务端和客户端 RPC 接口规范的设计人员。
+
+在前面的例子中为了简化将以上几种角色的工作全部放到了一起，虽然看似实现简单，但是不利于后期的维护和工作的切割。
 
 - RPC 服务接口规范定义
 
@@ -161,14 +165,7 @@ func main() {
 		if err != nil {
 			log.Fatal("accept error ",err)
 		}
-		// 通过 rpc.ServeConn 函数在该 TCP 链接上为对方提供 RPC 服务
 		go rpc.ServeConn(conn)
 	}
 }
 ```
-
-
-
-# Protobuf
-
-Protobuf 是 Protocol Buffers 的简称，它是 Google 开发的一种数据描述语言，于2008年对外开源。Protobuf 刚开源时的定位类似于 XML、JSON 等数据描述语言，通过附带工具生成代码并实现将结构化数据序列化的功能。Protobuf 作为接口规范的描述语言，可以作为设计安全的跨语言 PRC 接口的基础工具。

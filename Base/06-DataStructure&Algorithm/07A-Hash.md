@@ -21,7 +21,7 @@
 
 没有绝对安全的加密算法，所有的安全措施，只是增加攻击的成本而已。
 
-![为什么使用 MD5 存储密码非常危险](https://mp.weixin.qq.com/s/8AH668faMYVXnvsSjrHY3A)
+[为什么使用 MD5 存储密码非常危险](https://mp.weixin.qq.com/s/8AH668faMYVXnvsSjrHY3A)
 
 
 ## 唯一标识

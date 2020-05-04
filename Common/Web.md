@@ -24,7 +24,7 @@ Web中要保存/共享数据有四个范围：页面(PageContext)、请求(Reque
 - 由于使用Ajax，不会跳转页面，如果保存在request中，下一个页面无法获取，所以使用request不行；
 - application对象只有一个，如果使用application，后保存的会将前面的覆盖；
 - 所以使用Session来保存登录账号的数据。
-  - 如果Session中有多个数据的话一个个移除过于麻烦，可直接让Session失效`session.invalidate()`
+  - 如果Session中有多个数据的话一个个移除过于麻烦，可直接让Session失效
 
 
 

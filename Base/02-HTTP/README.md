@@ -12,7 +12,7 @@ Web 使用一种名为 HTTP（HyperText Transfer Protocol，超文本传输协�
 
 HTTP/0.9：只有一个 GET 命令，没有 HEADER 等描述数据的信息，服务器发送完毕就关闭 TCP 连接；
 
-HTTP/1.0：增加了很多命令，增加 status code 和 header，多字符集支持、多部分发送、权限、缓存等；
+HTTP/1.0：增加了很多命令，增加 status code 和 header，多字符集支持、多部分发送、权限、缓存等。常见使用于代理服务器（如 Nginx 默认配置）；
 
 HTTP/1.1：支持持久连接，增加 pipeline，增加 host 和其他一些命令；（当前使用的主要版本）
 
@@ -36,7 +36,9 @@ HTTP协议的初始版本中，每进行一次HTTP通信就要断开一次TCP连
 
 # URI、URL、URN
 
-URI（Uniform Resource Identifier）统一资源标识符，用字符串标识某一互联网资源。包含URL、URN。
+URI（Uniform Resource Identifier）统一资源标识符，用字符串标识某一互联网资源。是 URL、URN 的超集。
+
+- 一个资源可以有很多个 URI
 
 URL（Uniform Resource Locator）统一资源定位符，表示资源在互联网上所处的位置。可见URL是URI的子集。
 
@@ -49,9 +51,28 @@ URL（Uniform Resource Locator）统一资源定位符，表示资源在互联�
   - `query=string`：请求携带的参数
   - `hash`：锚点。如果找到的Web服务的某个内容文档很大，使用锚点可以直接找到文档中的某一片段
 
-URN（Uniform Resource Name）统一资源命名，通过名字来表示资源，在资源移动之后还能被找到，目前还没有非常成熟的使用方案。
+URN（Uniform Resource Name）统一资源命名，通过名字来表示资源，在资源移动之后还能被找到，并允许简单地将多个命名空间映射到单个URN命名空间
 
+- 如磁力链接 magnet:?xt=urn:sha1:YNCKHTQC5C
 
+---
+
+# URI 的编码
+
+为什么要对 URI 进行编码？
+
+- 传递的数据中可能含有用作分隔符的保留字符(如 `?`、`#`、`:` 等)；
+- 需要对可能产生歧义的数据编码
+  - 不在 ASCII 码范围内的字符
+  - ASCII 码中不可显示的字符
+  - URI 中规定的保留字符
+  - 不安全字符（传输环节中可能会被不正确处理），如空格、引号、尖括号等
+
+URI 百分号编码
+
+- 百分号编码的方式：将字符用 ‘%’ 加两个十六进制的数字来编码
+- 对于非 ASCII 码字符：建议先 UTF8 编码，再 US-ASCII 编码
+-   对 URI 合法字符，编码与不编码是等价的
 
 # HTTP客户端
 

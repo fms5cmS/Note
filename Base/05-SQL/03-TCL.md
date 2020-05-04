@@ -68,16 +68,16 @@ ROLLBACK TO a;  -- 回滚到保存点
 - 可重复读（Repeatable Read)：确保事务可以多次从一个字段中读取相同的值，在这个事务持续期间，禁止其他事务对这个字段进行更新，可以避免脏读和不可重复读，但幻读仍存在。
 - 序列化（serializable)：确保事务可以从一个表中读取相同的行，在这个事务持续期间，禁止其他事务对该表执行插入、更新和删除操作，多数并发问题都可避免，但性能十分低下。 
 
-| 隔离级别（√表示会发生该问题） | 脏读 | 不可重复读 | 幻读 |
+| 隔离级别（✓表示会发生该问题） | 脏读 | 不可重复读 | 幻读 |
 | :---------------------------: | :--: | :--------: | :--: |
-| 读取未提交（Read Uncommitted) |  √   |     √      |  √   |
-|  读取已提交(Read Committed)   |  ×   |     √      |  √   |
-|  可重复读（Repeatable Read)   |  ×   |     ×      |  √   |
+| 读取未提交（Read Uncommitted) |  ✓   |     ✓      |  ✓   |
+|  读取已提交(Read Committed)   |  ×   |     ✓      |  ✓   |
+|  可重复读（Repeatable Read)   |  ×   |     ×      |  ✓   |
 | 串行（序列）化（serializable) |  ×   |     ×      |  ×   |
 
 Oracle 支持2种事务隔离级别：`Read committed`、`serializable`。默认的事务隔离级别是`Read committed`；
 
-MySQL 支持4种事务隔离级别，默认的事务隔离级别是 Repeatable Read。 可以直接在 MySQL 中修改隔离级别，而不用在程序中修改。 
+MySQL 支持4种事务隔离级别，默认的事务隔离级别是 `Repeatable Read`。 可以直接在 MySQL 中修改隔离级别，而不用在程序中修改。 
 
 每启动一个MySQL程序，就会获得一个单独的数据库连接，每个数据库连接都有一个全局变量`@@tx——isolation`，表示当前的事务隔离级别，MySQL默认的隔离级别是`Repeatable Read`。 
 

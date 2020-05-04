@@ -92,7 +92,7 @@ func BubbleSort(nums []int, len int) {
 
 ## Selection Sort
 
-同样将数组分为有序和无序区，但[选择排序](https://mp.weixin.qq.com/s?__biz=MzIxMjE5MTE1Nw==&mid=2653198991&idx=1&sn=7f98d59898a911e1425baa6cc180c598&chksm=8c99e855bbee61439086680ceefef33c56038c5d552ae64c1d6135abe467b617aa62f4934f36&scene=21#wechat_redirect)每次会**从无序区中找到最小元素**，将其放到有序区末尾。
+将数组分为有序和无序区，但[选择排序](https://mp.weixin.qq.com/s?__biz=MzIxMjE5MTE1Nw==&mid=2653198991&idx=1&sn=7f98d59898a911e1425baa6cc180c598&chksm=8c99e855bbee61439086680ceefef33c56038c5d552ae64c1d6135abe467b617aa62f4934f36&scene=21#wechat_redirect)每次会**从无序区中找到最小元素**，将其放到有序区末尾。
 
 ```go
 func SelectionSort(nums []int, len int) {
@@ -100,11 +100,10 @@ func SelectionSort(nums []int, len int) {
 		return
 	}
 	for i := 0; i < len-1; i++ {
-		// 由于使用一个第三变量保存未排序范围内最小值的索引，每次赋初值为 i
 		minIndex := i
 		// 查找 [i, len-1] 范围内最小值的索引
 		for j := i + 1; j < len; j++ {
-			if nums[j] < nums[minIndex] {
+			if nums[j] < nums[minIndex] {  // 注意这里是和 minIndex 对应的值比较！
 				minIndex = j
 			}
 		}
@@ -131,7 +130,7 @@ func SelectionSort(nums []int, len int) {
 
 [插入排序](https://mp.weixin.qq.com/s?__biz=MzIxMjE5MTE1Nw==&mid=2653199343&idx=1&sn=a5491fa908e45e6117423d9ba5062611&chksm=8c99e935bbee60232aacb7c2b74961a24e7b86d44bf98357c597ad277a8eb15639c1de7034d9&scene=21#wechat_redirect)也包含元素的比较和移动两种操作：
 
-- 对于不同的查找插入点方法(无序区的元素和有序区元素比较时是从有序区的头到尾或从尾到头)，元素的比较次数是有区别的。
+- 不同的查找插入点方法(无序区的元素和有序区元素比较时是从有序区的头到尾或从尾到头)，元素的比较次数是有区别的。
 - 但对于一个给定的初始序列，移动操作的次数总是固定的，就等于逆序度。
 
 ```go
@@ -143,7 +142,8 @@ func InsertionSort(nums []int, len int) {
 		return
 	}
 	// [0,i)是有序区
-	for i := 1; i < len; i++ {
+  // 无序区的第一个元素依次与有序区的元素从后往前比较
+	for i := 1; i < len; i++ { 
 		for j := i - 1; j >= 0; j-- {
 			if nums[j] > nums[j+1] {
 				nums[j], nums[j+1] = nums[j+1], nums[j]
@@ -161,10 +161,6 @@ func InsertionSort(nums []int, len int) {
   - 平均 $O(n^2)$
 
 一共$n$个元素，在第一次排序最多比较一次，第二次排序最多比较两次，以此类推，最后一次比较$n-1$次，因此有：$1+2+3+...+n-1 = n*(n-1)/2$，因为在每次排序发现插入点之前，平均只有全体数据项的一半真的进行了比较，所以除以$2$，得到$n*(n-1)/4$。
-
-复制的次数大致等于比较的次数。然而，每次复制和交换的时间消耗不同，所以相对于随机数据，这个算法比冒泡排序快一倍，比选择排序略快。
-
-
 
 # O(nlogn)
 
@@ -238,8 +234,8 @@ func merge(nums []int, start, middle, end int) {
 		temp[i] = nums[pointB]
 		i++
 		pointB++
-	}
-	copy(nums[start:end+1],temp)
+	} 
+	copy(nums[start:end+1],temp) // 由于是左闭右开区间，所以是 [start:end+1]
 }
 ```
 
@@ -247,7 +243,7 @@ func merge(nums []int, start, middle, end int) {
 - 空间复杂度为 $O(n)$，尽管每次合并操作都需要申请额外的内存空间，但在合并完成之后，临时开辟的内存空间就被释放掉了。在任意时刻，CPU 只会有一个函数在执行，也就只会有一个临时的内存空间在使用。临时内存空间最大也不会超过 n 个数据的大小，所以空间复杂度是 $O(n)$，并不是原地排序
 - 时间复杂度：
 
-假设对 n 个元素进行归并排序需要时间 $T(n)$，那分解成两个子数组排序的时间都是 $T(n/2)$。我们知道，merge() 函数合并两个有序子数组的时间复杂度是 $O(n)$。所以，归并排序的时间复杂度的计算公式就是：
+假设对 n 个元素进行归并排序需要时间 $T(n)$，那分解成两个子数组排序的时间都是 $T(n/2)$。由于 `merge()` 函数合并两个有序子数组的时间复杂度是 $O(n)$。所以，归并排序的时间复杂度的计算公式就是：
 
 ```
 T(1) = C； n=1时，只需要常量级的执行时间，所以表示为C。
@@ -285,17 +281,19 @@ func quickSort(nums []int, low, high int) {
 	quickSort(nums, low, q-1)
 	quickSort(nums, q+1, high)
 }
-// 获取分区点
+// 获取分区点的索引
 func partition(nums []int, low, high int) int {
-	pivot := nums[high]
+	pivot := nums[high]  // 以最后一个元素作为分区点
 	var i = low
-	// i 及 i 的左侧代表了值小于 pivot 的元素
+	// j 从左往右开始移动，当 nums[j] < pivot 时，交换索引 i 和 j 各自对应的值
 	for j := low; j < high; j++ {
 		if nums[j] < pivot {
 			nums[i], nums[j] = nums[j], nums[i]
 			i++
 		}
 	}
+	// 此时索引 i 对应的值就是从左往右第一个大于 pivot 的值
+	// 交换 i 和 high(即 pivot) 对应的值，则 i 就是分区点的索引
 	nums[i], nums[high] = nums[high], nums[i]
 	return i
 }
