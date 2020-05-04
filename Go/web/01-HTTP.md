@@ -2,13 +2,9 @@
 
 ```go
 func main() {
-	// 使用 HandleFunc() 注册路由(将某个函数与一个路由规则进行绑定)，第二个参数是一个函数
-	// HandleFunc() 则是将这个函数包装为实现了 http.Handler 接口的类型 http.HandlerFunc
 	http.HandleFunc("/", hello)
 	log.Println("Starting Http Server ...")
-	// 启动 HTTP 服务器并监听发送到指定地址和端口号的 HTTP 请求
 	// 如果是监听地址为 127.0.0.1 或 localhost，可简写为 ":4000"
-	// 第二个参数通常为 nil，服务端会调用 http.DefaultServeMux 进行处理
 	log.Fatal(http.ListenAndServe("localhost:4000",nil))
 }
 
@@ -17,26 +13,81 @@ func hello(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-服务端业务逻辑：
+## http.Handler 接口
 
-`HandleFunc(pattern string, handler func(ResponseWriter, *Request))`函数内部会将 handler 转为 `http.HandlerFunc` 类型(标准的 HTTP 请求处理器对象)，该类型实现了 `http.Handler` 接口：
+- `http.Handler` 接口
 
 ```go
 type Handler interface {
-	ServeHTTP(ResponseWriter, *Request)
+ ServeHTTP(ResponseWriter, *Request)
 }
 ```
 
-所以 `HandleFunc()` 函数实际是将第二个参数的函数转为实现了 `http.Handler` 接口的类型 `http.HandlerFunc`，那么自己创建一个实现了 `http.Handler` 接口的类型也是可行的！
+- 服务复用器(Multiplexer) `http.ServeMux`，带有基本的路由注册功能
+
+```go
+type ServeMux struct {/* 这里没有列出具体的字段 */}
+func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request){/* ... */}
+// 其他方法...
+// 对外提供一个默认的 ServeMux 来使用
+var DefaultServeMux = &defaultServeMux
+var defaultServeMux ServeMux
+```
+
+- 标准的 http 请求处理器类型 `http.HandleFunc`
+
+```go
+type HandlerFunc func(ResponseWriter, *Request)
+// ServeHTTP calls f(w, r).
+func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
+	f(w, r)
+}
+```
+
+## 注册路由
+
+方式一：
+
+```go
+func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
+	DefaultServeMux.HandleFunc(pattern, handler)
+}
+```
+
+默认的 `ServeMux` 会调用 `ServeMux.HandleFunc()`方法：
+
+```go
+func (mux *ServeMux) HandleFunc(pattern string,
+                                handler func(ResponseWriter, *Request)) {
+	if handler == nil {
+		panic("http: nil handler")
+	}
+  // 先将 handler 转为 HandlerFunc 类型(Handler 接口的实现类型)
+  // 然后将 pattern 和 Handler 接口的实现类型关联
+	mux.Handle(pattern, HandlerFunc(handler))
+}
+```
+
+示例见最开始的部分。
+
+---
+
+方式二：
+
+```go
+func Handle(pattern string, handler Handler) {
+  DefaultServeMux.Handle(pattern, handler)
+}
+```
+
+此时需要自定义一个实现了 `http.Handler` 接口的实现类，示例：
 
 ```go
 func main() {
-	// 使用 Handle() 来注册路由，第二个参数是 http.Handler 接口
 	http.Handle("/",&helloHandler{})
-	log.Println("Starting Http Server ...")
-	log.Fatal(http.ListenAndServe(":4000",nil))
+	// ...
 }
-// 创自定义一个实现了 http.Handler 接口的类型
+// 自定义一个实现了 http.Handler 接口的类型
 type helloHandler struct {}
 
 func (helloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -44,22 +95,11 @@ func (helloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-## 服务复用器(ServeMux)
+---
 
-`Handle(pattern string, handler Handler)` 和 `HandleFunc(pattern string, handler func(ResponseWriter, *Request))` 这两个用于服务端业务逻辑的函数实际上是对 `http.DefaultServeMux`(该对象是一个 `http.ServeMux` 类型) 的一层封装，源码：
+方式三：
 
-```go
-func Handle(pattern string, handler Handler) {
-  DefaultServeMux.Handle(pattern, handler)
-}
-func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
-	DefaultServeMux.HandleFunc(pattern, handler)
-}
-```
-
-`http.ServeMux` 是一个带有基本路由功能的服务复用器(Multiplexer)，注意，该类型也是一个 `http.Handler` 接口的实现类型。
-
-可以使用 `http.NewServeMux()` 创建一个 `http.ServeMux`对象：
+以上两种方式都是调用了 http 包提供的默认的 `ServeMux` 来注册路由的，可以使用 http.NewServeMux() 创建一个 `http.ServeMux` 对象然后注册路由：
 
 ```go
 func main() {
@@ -70,7 +110,9 @@ func main() {
 }
 ```
 
-## 服务器对象(Server)
+## 启动服务
+
+`http.ListenAndServe()` 函数启动 HTTP 服务器并监听发送到指定地址和端口号的 HTTP 请求：
 
 ```go
 func ListenAndServe(addr string, handler Handler) error {
@@ -79,24 +121,21 @@ func ListenAndServe(addr string, handler Handler) error {
 }
 ```
 
-最开始提到，调用该函数时，第二个参数通常传入 `nil`，如果直接传入一个处理器(Handler)，就无法进行路由注册了。
+第二个参数通常为 `nil`，服务端会调用 `http.DefaultServeMux` 进行处理，如果直接传入一个处理器(`Handler`)，就无法进行路由注册了。
 
-从 `http.ListenAndServe()` 的源码可以看出，其底层创建了一个 `http.Server` 对象来使用，`http.Server` 该对象包含了很多选项，如监听地址、服务复用器和读写超时等等。使用 `http.Server` 改写之前的代码：
+`http.ListenAndServe()`会创建一个 `http.Server` 对象(包含很多选项，如监听地址、服务复用器和读写超时等)，然后调用该对象的 `ListenServe()` 方法，也可以自定义一个 `http.Server`对象来启动服务：
 
 ```go
 func main() {
 	mux := http.NewServeMux()
-	mux.Handle("/", &helloHandler{})
 	mux.HandleFunc("/timeout", func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(2*time.Second)
 		w.Write([]byte("Timeout"))
 	})
 	server := http.Server{
 		Addr:         ":4000",
-    // 用于处理程序响应 HTTP 请求，ServerMux 也是一个 Handler 接口的实现类
-		Handler:      mux,
-		// 允许写入的最大时间
-		WriteTimeout: 2 * time.Second,
+		Handler:      mux,  // 用于处理程序响应 HTTP 请求
+		WriteTimeout: 2 * time.Second, // 允许写入的最大时间
 	}
 	log.Println("Starting Http Server ...")
 	log.Fatal(server.ListenAndServe())
@@ -107,7 +146,7 @@ func main() {
 
 ## 停止服务
 
-在产生环境中面临的一个困难就是当需要更新服务端程序时需要重启服务，但此时可能有一部分请求进行到一半，如果强行中断这些请求可能会导致意外的结果。因此，开源社区提供了多种优雅停止的方案，如 facebookgo/grace。从 Go 1.8 版本开始，标准库开始支持原生的优雅停止方案，但必须使用自定义的 `http.Server` 对象，因为对应的 `Close` 方法无法通过其它途径调用。
+在生产环境中面临的一个困难就是当需要更新服务端程序时需要重启服务，但此时可能有一部分请求进行到一半，如果强行中断这些请求可能会导致意外的结果。因此，开源社区提供了多种优雅停止的方案，如 facebookgo/grace。从 Go 1.8 开始，标准库开始支持原生的优雅停止方案，但必须使用自定义的 `http.Server` 对象，因为对应的 `Close()` 方法无法通过其它途径调用。
 
 ```go
 func main() {
@@ -157,28 +196,49 @@ func main() {
 
 # HTTP 客户端
 
-## 常用方法
-
-请求资源：`http.Get(url string)`
-
-从源码可看出，实际上调用的是`http.DefaultClient.Get(url)`：
+`http.Client`：
 
 ```go
+type Client struct {
+  // 用于确定HTTP请求的创建机制,如果为空,将会使用 DefaultTransport
+  Transport RoundTripper
+
+  // 定义重定向策略。如果不为空，客户端将在跟踪HTTP重定向前调用该函数
+  // 两个参数req和via分别为即将发起的请求和已经发起的所有请求，最早的已发起请求在最前面。
+  // 如果CheckRedirect返回错误，客户端将直接返回错误，不会再发起该请求。
+  // 如果CheckRedirect为空，Client将采用一种确认策略，将在10个连续请求后终止
+  CheckRedirect func(req *Request, via []*Request) error
+
+  // 如果 Jar 为空，Cookie 将不会在请求中发送，并会在响应中被忽略。
+  // 一般用  http.SetCookie() 方法来设定 Cookie
+  Jar CookieJar
+
+  Timeout time.Duration
+}
+// 对外提供的默认客户端
+var DefaultClient = &Client{}
+```
+
+## 常用方法
+
+GET 方式请求资源：`http.Get(url string)`
+
+```go
+// 底层实际调用 http.DefaultClient.Get(url)
 resp, err := http.Get("https://www.bilibili.com")
-//必须对 resp.Body 进行关闭
+// 必须对 resp.Body 进行关闭
 defer resp.Body.Close()
 ```
 
 ---
 
-以 POST 方式发送数据：`http.Post(url, contentType string, body io.Reader)`
+POST 方式发送数据：`http.Post(url, contentType string, body io.Reader)`
 
 - contentType 为将要 POST 数据的资源类型
-- body 为数据的比特流：
-
-从源码可看出，实际上调用的是`http.DefaultClient.Post(url, contentType, body)`
+- body 为数据的比特流
 
 ```go
+// 底层实际调用 http.DefaultClient.Post(url, contentType, body)
 resp, err := http.Post("http://example.com/upload", "image/jpeg", &imageDataBuf)
 //必须对 resp.Body 进行关闭
 defer resp.Body.Close()
@@ -186,8 +246,7 @@ defer resp.Body.Close()
 
 ---
 
-- 只请求目标 URL 的头部信息：`http.Head(url string)`
-  - 从源码可看出，实际上调用的是`http.DefaultClient.Head(url)`
+HEAD 方式获取头部信息：`http.Head(url string)`，底层实际调用的是 `http.DefaultClient.Head(url)`
 
 ## httputil
 
@@ -201,7 +260,7 @@ fmt.Printf("%s\n", s)
 
 ## http.Client
 
-- 使用 `http.Client` 定制信息，如控制请求头等（下面的代码省略了错误的处理）
+- 使用 `http.Client` 定制信息，如控制请求头等（这里省略了错误的处理）
 
 ```go
 request, err := http.NewRequest(http.MethodGet, "https://www.imooc.com", nil)
@@ -219,29 +278,6 @@ fmt.Printf("%s\n", s)
 ---
 
 - 自定义 `http.Client`
-
-`http.Client`类型的结构：
-
-```go
-type Client struct {
-  //用于确定HTTP请求的创建机制,如果为空,将会使用 DefaultTransport
-  Transport RoundTripper
-
-  //定义重定向策略。如果不为空，客户端将在跟踪HTTP重定向前调用该函数
-  //两个参数req和via分别为即将发起的请求和已经发起的所有请求，最早的已发起请求在最前面。
-  //如果CheckRedirect返回错误，客户端将直接返回错误，不会再发起该请求。
-  // 如果CheckRedirect为空，Client将采用一种确认策略，将在10个连续请求后终止
-  CheckRedirect func(req *Request, via []*Request) error
-
-  //如果Jar为空，Cookie将不会在请求中发送，并会在响应中被忽略。
-  //一般用  http.SetCookie() 方法来设定 Cookie
-  Jar CookieJar
-
-  Timeout time.Duration
-}
-```
-
-自定义：
 
 ```go
 request, err := http.NewRequest(http.MethodGet, "https://www.imooc.com", nil)
@@ -290,32 +326,29 @@ fmt.Printf("%s\n", s)
 如果仅使用 text 库：
 
 ```go
-utf8Reader := transform.NewReader(resp.Body,
-                                  simplifiedchinese.GBK.NewDecoder())
+utf8Reader := transform.NewReader(resp.Body, simplifiedchinese.GBK.NewDecoder())
 all, err := ioutil.ReadAll(utf8Reader)
 ```
 
 这种方式的通用性较差，所以通常会结合 html 库来自动检测 html 文件的编码：
 
 ```go
-//对 charset.DetermineEncoding 进行了包装
+func main()  {
+  // 获取 HTML 的编码
+  e := determineEncoding(resp.Body)
+  // 对 resp.Body 包装，使其读取编码格式为 e.NewDecodeer()
+  htmlReader := transform.NewReader(resp.Body, e.NewDecoder())
+  all, err := ioutil.ReadAll(htmlReader)
+}
+
+// 对 charset.DetermineEncoding 进行了包装，这里通过响应的前 1024 字节来确定编码
 func determineEncoding(r io.Reader) encoding.Encoding {
-	//如果直接从 r 中读取前 1024 bytes 的话，这 1024 bytes 就没办法再读了，所以这里使用 bufio 包装 r 以后 Peek
+	// 如果直接从 r 中读取前 1024 bytes 的话，这 1024 bytes 就没办法再读了，所以这里使用 bufio 包装 r 以后 Peek
 	bytes, err := bufio.NewReader(r).Peek(1024)
 	if err != nil {
 		panic(err)
 	}
 	encoding, _, _ := charset.DetermineEncoding(bytes, "")
 	return encoding
-}
-```
-
-```go
-func main()  {
-  //获取 HTML 的编码，对 charset.DetermineEncoding() 进行了包装，见上面
-  e := determineEncoding(resp.Body)
-  //将其转为 UTF-8
-  utf8Reader := transform.NewReader(resp.Body, e.NewDecoder())
-  all, err := ioutil.ReadAll(utf8Reader)
 }
 ```

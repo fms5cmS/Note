@@ -105,16 +105,6 @@ Go 有一个轻量级的测试框架，由 `go test` 命令和 testing 包构成
   - 如果你将代码保存在远程的代码仓库，那就必须使用远程仓库作为基本路径
 - y.go 在导入 x.go 之后，如果要使用 x.go 中的内容，**必须通过 `包名.` 的方式来使用**，即 y.go 中通过 `hello.Hello("bx")` 的方式来调用 x.go 的 Hello 函数
 
-# 访问权限
-
-在上面的示例中可以看到，x.go 的 Hello 函数的函数名首字母是大写的，如果改为小写还可以继续在 y.go 中调用吗？答案是不能！
-
-Go 语言中：
-
-**同包下不同文件中的全局资源（全局变量、结构体、函数等无论首字母是否大写）可以随意访问**；
-
-**不同包下资源要想互相访问，必须满足：1. 导入要使用的资源所在的包；2. 该资源的首字母必须大写**。
-
 # build 和 install
 
 install：
@@ -148,23 +138,16 @@ build：
 - 使用 `go build` 生产可执行文件后，`./可执行文件名` 即可运行，使用 `-v` 参数可以打印出程序的一些信息
 - 安装：`go install` 编译并安装包和依赖
 - `go clean` 移除对象文件和缓存文件
-- `go tool compile -S file.go` 查看代码编译后的汇编内容
-  - `-S` 表示打印出生成的汇编代码。
-  - 注意，此时输出的汇编代码还没有链接，呈现的地址都是偏移量。
-  - 也可以使用 `go build -gcflags -S file.go` 命令
-- `go tool objdump -s main.main file.exe` 查看链接之后得到的内容
-  - 相当于反汇编你的程序，会丢失很多信息。
 - `go get`，使用 `go get`前需要安装 git
   - 拉取依赖，会进行指定性拉取（更新），并不会更新所依赖的其它模块。
   - `-u` 更新现有的依赖，会强制更新它所依赖的其它全部模块，不包括自身。
   - `-fix` 在下载代码包后先运行一个用于根据当前 Go 语言版本修正代码的工具，然后再安装代码包
   - `-insecure` 允许通过非安全的网络协议下载和安装代码包。HTTP 就是这样的协议。
-- `godoc -http :端口` 即可在浏览器中输入 `localhost:端口` 后查看标准库的文档
 
 下载第三方库时无法访问：
 
 1. 下载 golang.org 的包时，golang.org/x/net 对应 GitHub 上的镜像地址为 https://github.com/golang/net
-2. 将其源码 $GOPATH/src/github.com/golang/net 复制到 $GOPATH/src/golang.org/x/
+2. 将其源码 \$GOPATH/src/github.com/golang/net 复制到 \$GOPATH/src/golang.org/x/
 3. 然后 `go build net`
 
 # Go Modules
@@ -383,14 +366,6 @@ go install honnef.co/go/tools/cmd/structlayout-optmize
 # Web
 
 Web 部分的内容是学习[Go 语言 Web 应用开发](https://github.com/unknwon/building-web-applications-in-go)的笔记！
-
-# 相对路径
-
-Golang 的相对路径是**相对于执行命令时的目录**！
-
-`go run` 执行时会将文件放到 /tmp/go-build... 目录下，编译并运行！
-
-`go test` 只能在当前目录下执行，所以执行测试用例时，执行目录就是测试目录。
 
 # 部分类库说明
 

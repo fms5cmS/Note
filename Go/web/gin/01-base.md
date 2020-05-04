@@ -1,5 +1,7 @@
 下载：`go get -u github.com/gin-gonic/gin`
 
+![](../../../images/gin-read.png)
+
 # Hello World
 
 ```go
@@ -66,16 +68,29 @@ r.GET("/test", func(c *gin.Context) {
 
 ### 路径变量
 
-访问路径：`http://localhost:8080/zzk/24`
+访问路径：`http://localhost:8080/user/zzk`
 
 ```go
 r.GET("/user/:name/:id", func(c *gin.Context) {
   c.JSON(200,gin.H{
     "name": c.Param("name"),
-    "id":   c.Param("id"),
   })
 })
 ```
+
+这是精确匹配，只能匹配一个，上面无法匹配 `/user/` 以及 `/user/zzk/24` 的。
+
+```go
+r.GET("/family/*name", func(c *gin.Context) {
+  c.JSON(200,gin.H{
+    "name": c.Param("name"),
+  })
+})
+```
+
+使用 `*` 就可以匹配多层路径了，如访问 `/family/who/is/mom` 显示 `{"name": "/who/is/mom"}`，而如果访问 `/family` 或被重定向到 `/family/` 显示 `{"name": "/"}`。
+
+如果设置了 `r.RedirectTrailingSlash = false` 就不会自动重定向了。
 
 ## POST
 
@@ -86,6 +101,20 @@ r.POST("/body", func(c *gin.Context) {
   firstName := c.PostForm("first_name")
   lastName := c.DefaultPostForm("last_name", "default_last_name")
   c.String(http.StatusOK, "%s %s", firstName, lastName)
+})
+```
+
+## JSON 输出
+
+Gin 还提供了其他的 JSON 输出方法：
+
+```go
+// 美化输出的 JSON 字符串，使其缩进
+c.IndentedJSON(200, user{ID: 456, Name: "李四", Age: 25})
+// 保持原来的字符，不进行转义，不会使用字符对应的 Unicode 值替换 html 字符，所以下面的文字显示会被加粗
+// JSON() 方法会默认对内容中的特殊字符进行转义
+c.PureJSON(200, gin.H{
+  "message": "<b>Hello, world!</b>",
 })
 ```
 

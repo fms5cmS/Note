@@ -110,3 +110,198 @@ Cron 表达式：`秒 分 时 日 月 周`
 | `-`   | 指定一个范围                               |
 | `*/n` | 指定增量                                   |
 | `?`   | 不指定值，用于替代 `*`，类似于 Go 中的 `_` |
+
+# 验证
+
+[官网](https://pkg.go.dev/gopkg.in/go-playground/validator.v9?tab=doc)
+
+```shell
+go get github.com/go-playground/validator/v10
+```
+
+## 约束
+
+借助 `validate` Tag 来对结构体的字段进行约束，如：
+
+```go
+type User struct {
+	Name string `validate:"min=6,max=10"`
+	Age  int    `validate:"min=1,max=100"`
+}
+```
+
+### 范围约束
+
+- 数值：约束其值
+- 字符串：约束其长度
+- 切片、数组、map：约束其长度
+
+```go
+type User struct {
+	Name string `validate:"ne=admin"` // ne 不等于
+	Age  int    `validate:"gte=18"`   // gte  大于等于
+	// oneof 只能是列举出的值其中一个，这些值必须是数值或字符串，以空格分隔，如果字符串中有空格，将字符串用单引号包围
+	Sex string `validate:"oneof=male female"`
+	// 注意如果字段类型是time.Time，使用 gt/gte/lt/lte 等约束时不用指定参数值，默认与当前的 UTC 时间比较
+	RegTime time.Time `validate:"lte"` // lte 小于等于
+}
+
+func TestValidator(t *testing.T) {
+	// 创建验证器，这个验证器可以指定选项、添加自定义约束
+	validate := validator.New()
+	// 使用 Struct() 验证各种结构对象的字段是否符合定义的约束
+	u := User{Name: "admin", Age: 15, Sex: "none", RegTime: time.Now().UTC().Add(1 * time.Hour)}
+	err = validate.Struct(u)
+	if err != nil {
+		// 四个字段的值都验证失败了
+		fmt.Println("User validate error: \n",err)
+	}
+}
+```
+
+### 跨字段约束
+
+可以定义跨字段的约束，即该字段与其他字段之间的关系，以下两种：
+
+1. 参数字段就是同一个结构中的平级字段；
+2. 参数字段为结构中其他字段的字段
+
+语法就是在之前的约束后面加上 `field`，如 `eqfield` 就是字段间的相等约束。如果是更深层次的字段，在 `field` 前面还要加上 `cs`，如 `eqcsfield`
+
+```go
+eqfield=ConfirmPassword
+eqcsfield=InnerStructField.Field
+```
+
+```go
+
+type RegisterForm struct {
+	Name     string `validate:"min=2"`
+	Age      int    `validate:"min=18"`
+	Password string `validate:"min=10"`
+	// 该字段的值要和 Password 字段的值相等
+	Pwd      string `validate:"eqfield=Password"`
+}
+
+func TestCrossFieldConstraint(t *testing.T) {
+	validate := validator.New()
+	f := RegisterForm{
+		Name:     "dj",
+		Age:      18,
+		Password: "1234567890",
+		Pwd:      "123",
+	}
+	err = validate.Struct(f)
+	if err != nil {
+		// Key: 'RegisterForm.Pwd' Error:Field validation for 'Pwd' failed on the 'eqfield' tag
+		fmt.Println("f validate error: \n", err)
+	}
+}
+```
+
+### 字符串
+
+字符串相关的约束：
+
+```
+contains=：   包含参数子串，例如contains=email；
+containsany： 包含参数中任意的 UNICODE 字符，例如containsany=abcd；
+containsrune：包含参数表示的 rune 字符，例如containsrune=☻；
+excludes：    不包含参数子串，例如excludes=email；
+excludesall： 不包含参数中任意的 UNICODE 字符，例如excludesall=abcd；
+excludesrune：不包含参数表示的 rune 字符，excludesrune=☻；
+startswith：  以参数子串为前缀，例如startswith=hello；
+endswith：    以参数子串为后缀，例如endswith=bye。
+```
+
+### 唯一性
+
+使用 `unqiue` 来指定唯一性约束，对不同类型的处理如下：
+
+- 对于数组和切片，`unique` 约束没有重复的元素；
+- 对于 map，`unique` 约束没有重复的值；
+- 对于元素类型为结构体的切片，`unique` 约束结构体对象的某个字段不重复，通过 `unqiue=field` 指定这个字段名。
+
+```go
+type User struct {
+  Name    string   `validate:"min=2"`
+  Age     int      `validate:"min=18"`
+  Hobbies []string `validate:"unique"`
+  Friends []User   `validate:"unique=Name"`
+}
+```
+
+### 邮件
+
+通过 `email` 限制字段必须是邮件格式：
+
+```go
+type User struct {
+  Name  string `validate:"min=2"`
+  Age   int    `validate:"min=18"`
+  Email string `validate:"email"`
+}
+```
+
+### 特殊
+
+有一些比较特殊的约束：
+
+```
+-：        跳过该字段，不检验；
+|：        使用多个约束，只需要满足其中一个，例如 rgb|rgba；
+required： 字段必须设置，不能为默认值；
+omitempty：如果字段未设置，则忽略它。
+```
+
+## VarWithValue()
+
+在一些简单的场景中，可能只需要对两个变量进行比较，如果每次都定义结构体和 Tag 就过于麻烦，Validator 提供了 `VarWithValue()` 方法，只要传入两个变量及约束即可：
+
+```go
+func TestVarWithValue(t *testing.T) {
+	str1 := "my name is fms5cms"
+	str2 := "ms5cms"
+	validate := validator.New()
+	t.Log(validate.VarWithValue(str1,str2,"eqfield"))
+	t.Log(validate.VarWithValue(str1,str2,"nefield"))
+}
+```
+
+## 自定义约束
+
+```go
+ormation struct {
+	Info string `validate:"startwithfS"`
+}
+
+func CheckStartWithfS(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+	return strings.HasPrefix(value,"fS")
+}
+
+func TestCustomize(t *testing.T) {
+	validate := validator.New()
+	// 注册校验规则
+	validate.RegisterValidation("startwithfS",CheckStartWithfS)
+	question := Information{"fS?"}
+	answer := Information{"my favorite group"}
+	t.Log(validate.Struct(question))
+	t.Log(validate.Struct(answer))
+}
+```
+
+## 错误处理
+
+validator 返回的错误实际上只有两种：
+
+- 参数错误时，返回 `InvalidValidationError` 类型；
+- 校验错误时返回 `ValidationErrors`，这是一个切片，保存了每个字段违反的每个约束信息。
+
+所以 validator 校验返回只有三种情况：
+
+1. `nil` 没有错误
+2. `InvalidValidationError` 输入参数错误
+3. `ValidationErrors` 字段违反约束
+
+可以在程序判断 `err != nil` 后，依次将 err 转换为 `InvalidValidationError` 和 `ValidationErrors` 以获取更详细的信息。

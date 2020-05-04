@@ -1,10 +1,35 @@
-# 3.0 webservice
+# 3.0 Lombok 使用
 
-webservice是一个SOA(面向服务的架构)，不依赖于语言，不依赖于平台，可以实现不同语言间的相互调用，通过Internet进行基于HTTP协议的网络应用间的交互。
+javac 从 Java6 开始支持 JSR-269 API 规范，只要程序实现了该 API，就能在 javac 运行时得到调用。Lombok 支持了 JSR-269 API 规范。
 
-使用场景：异构系统的整合；不同客户端(PC、移动)的整合。
+给 IDE 安装 Lombok 插件；注意，每个项目都要引入依赖：
 
-如：天气预报(可通过实现webservice客户端调用远程天气服务实现)、单点登录。
+```xml
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.16.18</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+注意：在类需要序列化、反序列化时详细控制字段。
+
+使用：注解都是标注在类上。常用注解：
+
+- `@Getter`:生成 public 的 Getter 方法
+  - `@Getter(AccessLevel.PROTECTED)`:生成 protected 的 Getter 方法,还可以生成其他访问权限的方法
+- `@Setter`:生成 public 的 Setter 方法
+  - `@Setter(AccessLevel.PROTECTED)`:生成 protected 的 Setter 方法
+- `@NoArgsConstructor`:生成无参构造器;
+- `@AllArgsConstructor`:生成所有参数的构造器
+- `@ToString`:生成打印所有属性的 toString()
+  - `@ToString(exclude = {"column1","column2"})`:生成的 toString()排除一个或多个属性，相反的，使用 of 说明该方法中只要哪些属性
+  - 直接使用`@ToString`的话，`toString()`只会打印当前类的属性而不会打印父类的属性，如果还要打印父类的属性，可以使用`@ToString(callSuper = true)`
+- `@EqualsAndHashCode`:重写 equals()、hashCode()。也可以使用 exclude 排除属性，使用 of 说明该方法中只要哪些属性
+- `@Slf4j`:生成 Logback 日志框架的`Logger`的实例：log，可以直接调用 log
+- `@Log4j`:当项目使用 Log4j 日志框架时使用
+- `@Data`:包含了`@Getter`、`@Setter`、`@ToString`、`@EqualsAndHashCode`，使用所有属性来生成！
 
 
 
