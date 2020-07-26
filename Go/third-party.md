@@ -108,9 +108,11 @@ Go 语言标准库自带一个日志库：log，但这个库没有日志级别�
 
 [Logrus](https://github.com/sirupsen/logrus)使用简单，且兼容标准库 log，但性能一般，其并发安全是通过 mutex 实现的，如果确定不需要锁，可以使用 `logrus.SetNoLock()` 禁用。
 
-[uber-go/zap](https://github.com/uber-go/zap) 是 Uber 出品的快速、结构化、支持级别的日志库。[从 Go 高性能日志库 zap 看如何实现高性能 Go 组件](https://studygolang.com/articles/14220)
+[uber-go/zap](https://github.com/uber-go/zap) 是 Uber 出品的快速、结构化、支持级别的日志库。[从 Go 高性能日志库 zap 看如何实现高性能 Go 组件](https://studygolang.com/articles/14220)。
 
 [rs/zerolog](https://github.com/rs/zerolog) 独特的链式 API 允许 Zerolog 避免内存分配和反射来编写 JSON（或 CBOR）日志事件。
+
+[lumberjack](https://github.com/natefinch/lumberjack) 是将日志写入滚动文件中，可以设置单日志文件的最大占用空间、最大生存周期、可保留的最多旧文件数等。如果有超出设置项的情况，则对日志文件进行滚动处理。
 
 # ORM
 
@@ -449,6 +451,8 @@ func ParseToken(token string) (*Claims, error) {
 
 [swag](https://github.com/swaggo/swag) 可以自动生成 Restful 风格的 API 文档。支持 Gin、echo、buffalo 框架以及 Go 自带的 net/http 包。
 
+
+
 # 定时任务
 
 [robfig/cron](https://github.com/robfig/cron) 实现了 cron 规范解析器和任务运行器，简单来讲就是包含了定时任务所需的功能。
@@ -473,3 +477,65 @@ Cron 表达式：`秒 分 时 日 月 周`
 | `-`   | 指定一个范围                               |
 | `*/n` | 指定增量                                   |
 | `?`   | 不指定值，用于替代 `*`，类似于 Go 中的 `_` |
+
+# 邮箱
+
+```go
+go get -u gopkg.in/gomail.v2
+```
+
+gomail 是一个用于发送电子邮件得第三方开源库，目前只支持 SMTP 服务器发送电子邮件。
+
+SMTP Server 的 HOST 端口号为 465，还有一种常用的 HOST 端口号为 25，不建议使用。25 端口在云服务厂商上是一个经常被默认封禁的端口，且不可解封，如果使用 25 端口，可能部署到云服务环境后邮件无法正常发送。
+
+
+
+# 令牌桶
+
+```go
+go get -u github.com/juju/ratelimit@sv1.0.1
+```
+
+ratelimit 提供了一个简单高效的令牌桶实现，可以用于实现限流器的逻辑
+
+
+
+# 分布式链路追踪
+
+Jaeger 是 uber 开源的分布式链路追踪系统，它提供了分布式上下文传播、分布式交易监控、原因分析、服务依赖性分析、性能/延迟优化分析等核心功能。
+
+通过 Docker 的方式安装并启动：
+
+```shell
+docker run -d --name jaeger \
+	-e COLLECTOR_ZIPKIN_HTTP_PORT=9411 \
+	-p 5775:5775/udp \
+	-p 6831:6831/udp \
+	-p 6832:6832/udp \
+	-p 5778:5778 \
+	-p 16686:16686 \
+	-p 14268:14268 \
+	-p 9411:9411 \
+	jaegertracing/all-in-one:1.16
+```
+
+启动后，打开浏览器访问 `http://localhost:16686` 即可看到 Jaeger 的 Web UI 界面。
+
+```go
+go get -u github.com/opentracing/opentracing-go
+go get -u github.com/uber/jaeger-client-go/
+```
+
+
+
+# 热更新
+
+- 配置热更新
+
+要对配置文件热更新，就需要对配置文件进行监听。开源库 fsnotify 是一个跨平台文件系统监听事件库，常用于文件监听。它是基于 golang.org/x/sys 实现的，并非 syscall 标准库，所以安装的同时需要更新 golang.org/x/sys 的版本
+
+```go
+go get -u golang.org/x/sys/...
+go get -u github.com/fsnotify/fsnotify
+```
+

@@ -430,16 +430,16 @@ JWT 的数据结构是：`Header.Payload.Signature`：(使用`.`来分隔)
 }
 ```
 
+最后使用 base64UrlEncode 算法对上面的 JSON 对象转换，使其成为 JWT 的一部份。
+
 ### Payload(负载)
 
 存放实际需要传递的数据(用户必要且不隐私的)，分为三个部分：
 
 - 1.已注册信息(Registered claims)，JWT 规定了 7 个官方字段，供选用(不强制但推荐)：
-  - iss (issuer 签发人)、exp (expiration time 过期时间)、sub (subject 主题)、aud (audience 受众)、nbf (Not Before 生效时间)、iat (Issued At 签发时间)、jti (JWT ID 编号)：
+  - iss (issuer 签发人)、exp (expiration time 过期时间)、sub (subject 主题)、aud (audience 受众，接受 JWT 的一方)、nbf (Not Before 生效时间)、iat (Issued At 签发时间)、jti (JWT ID 编号)：
 - 2.公开数据(Public claims)，需要额外注册。
 - 3.私有数据(Private claims)，用于在同意使用它们的各方之间共享信息，并且不是注册的或公开的声明，可以随意定义。
-
-即使 JWT 有签名加密机制，但 payload 内容都是明文记录，除非记录的是加密数据，否则不排除泄露隐私数据的可能，所以，**不要在 JWT 的 payload 中放置敏感信息，除非它们是加密的**。
 
 如：
 
@@ -451,9 +451,19 @@ JWT 的数据结构是：`Header.Payload.Signature`：(使用`.`来分隔)
 }
 ```
 
+同样会使用 base64UrlEncode 算法对该 JSON 对象转换，使其成为 JWT Token 的一部份，注意 base64UrlEncode 算法是可逆的，所以，**不要在 JWT 的 payload 中放置敏感信息，除非它们是加密的**。
+
 ### Signature(签名)
 
-这是由开发者提供的信息，是服务器验证传递的数据是否安全有效的标准。**在生成 JWT 最终数据之前，先使用 header 中定义的加密算法将 header 和 payload 加密，并使用`.`连接，然后再使用相同的加密算法对加密后的数据和签名信息进行加密，得到最终结果。**
+这是由开发者提供的信息，是服务器验证传递的数据是否安全有效的标准。**在生成 JWT 最终数据之前，先使用 base64UrlEncode 将 header 和 payload 加密，并使用`.`连接，然后再使用 header 中定义的加密算法对加密后的数据和签名信息进行加密，得到 Signature：**
+
+```json
+HMACSHA256( 
+  base64UrlEncode(header) + "." + base64UrlEncode(payload), 
+  secret)
+```
+
+Signature 是由 Header、Payload 和 secret 的算法组成的，可以用来校验消息是否被篡改。
 
 ## 执行流程
 
@@ -522,7 +532,7 @@ JSONP 是通过在文档中嵌入一个`<script>`标记来从另一个域中返�
 
 当 8888 端口的服务读取该页面，该标记会向`http://127.0.0.8887`(8887 端口的服务)发送一个 GET 请求，此时也可以绕过同源策略。但是，仅支持 GET 请求。
 
-## CORS 解决跨域
+## CORS 解决跨域！
 
 CORS(Cross-Origin Resource Sharing)跨来源资源共享。
 

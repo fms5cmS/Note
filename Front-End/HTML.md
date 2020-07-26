@@ -277,7 +277,7 @@ HTML注释：`<!-- 注释信息-->`；
 
   - 样式效果：
 
-    ![](../images/Html-UnorderedList.png)
+    ![](../images/Html-orderedList.png)
 
 有序列表和无序列表在样式上会默认添加上的样式效果：一个1em（一个字体同等大小的边距）的上下外边距；40px（像素）大小的左外边距。
 

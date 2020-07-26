@@ -1,56 +1,22 @@
 在 MySQL 数据表设计中，一般有这么一个原则：如果存在大字段数据，而且它一般不变，应该将不变的字段单独放入另外一个表中。
 
-# Linux 下安装
-
-- 查看旧版本 MySQL：`rpm -qa | grep mysql`
-- 删除旧的组件：`rpm -e --nodeps 上面出现的组件`
-
 CentOS 7 下 MySQL 的 YUM 安装方式：可以查看：[官方文档](https://dev.mysql.com/doc/mysql-yum-repo-quick-guide/en/)
 
-1. [下载 yum 源](https://dev.mysql.com/downloads/repo/yum/)，选择 **Red Hat Enterprise Linux 7 / Oracle Linux 7 (Architecture Independent), RPM Package** ，下载后文件放入 Linux 系统中；
+在 MySQL 的命令行输入`show variables like 'character%'`查看字符集，下表是 8.0 的默认字符集。
 
-2. 在文件所在目录下的终端输入`yum localinstall mysql80-community-release-el7-1.noarch.rpm`安装 MySQL YUM 资源库；
+![](../images/MySQL-character.jpg)
 
-3. 为了不安装最新版本，需要先安装`yum-config-manager`命令所在的 yum-utils 包：`yum -y install yum-utils`；
+MySQL 的配置文件：Windows 中是 my.ini；Linux 中是`/etc/my.cnf`，主要的配置：
 
-4. 查看可安装的 MySQL：`yum repolist all | grep mysql`
+- 二进制日志 log-bin：主要用于主从复制。
+- 错误日志 log-error：默认关闭，记录严重的警告和错误信息，每次启动和关闭的详细信息等。
+- 查询日志 log：默认关闭，记录查询的 sql 语句，如果开启会降低 mysql 的整体性能，因为记录日志也需要消耗系统资源。
+- 数据文件：
+  - .frm 文件：存放表结构
+  - .myd 文件：存放表数据
+  - .myi 文件：存放表索引
 
-5. 设置默认安装 5.7 的 MySQL 而不是最新的 MySQL：
-
-   ```shell
-   sudo yum-config-manager --disable mysql80-community
-   sudo yum-config-manager --enable mysql57-community
-   ```
-
-6. 安装 MySQL：`yum install -y mysql-community-server`；
-
-7. 启动 MySQL 服务器：`systemctl start mysqld.service`
-
-8. 修改密码，
-
-   1. 首先查看 系统给 root 用户随机生成的密码：`sudo grep 'temporary password' /var/log/mysqld.log`，冒号后面的就是密码；
-   2. 使用 root 用户和上面得到的密码登录 MySQL：`mysql -uroot -p`，然后输入密码；
-   3. 修改密码：`ALTER USER 'root'@'localhost' IDENTIFIED BY '密码'`
-
-9. 退出 MySQL 登录后，在 Linux 的终端中查看 MySQL 安装时创建的的 mysql 用户组和 mysql 组：`cat /etc/group|grep mysql`或`mysqladmin --version` ，如果出现信息，说明安装成功；
-
-10. 设置自启动：`systemctl enable mysqld.service`
-
-11. 在 MySQL 的命令行输入`show variables like 'character%'`查看字符集，下表是 8.0 的默认字符集。
-
-    ![](../images/MySQL-character.jpg)
-
-12. MySQL 的配置文件：Windows 中是 my.ini；Linux 中是`/etc/my.cnf`，主要的配置：
-
-    - 二进制日志 log-bin：主要用于主从复制。
-    - 错误日志 log-error：默认关闭，记录严重的警告和错误信息，每次启动和关闭的详细信息等。
-    - 查询日志 log：默认关闭，记录查询的 sql 语句，如果开启会降低 mysql 的整体性能，因为记录日志也需要消耗系统资源。
-    - 数据文件：
-      - .frm 文件：存放表结构
-      - .myd 文件：存放表数据
-      - .myi 文件：存放表索引
-
-注意：mysqld 是服务端程序  ； mysql 是命令行客户端程序 。
+注意：mysqld 是服务端程序；mysql 是命令行客户端程序。
 
 # 逻辑架构
 
@@ -100,22 +66,26 @@ show variables like '%storage_engine%';
 | 表空间 | 小                                                             | 大                                                                        |
 | 关注点 | 性能                                                           | 事务                                                                      |
 
-# 分析
+InnoDB 存储引擎还有个“自适应 Hash 索引”的功能，就是当某个索引值使用非常频繁的时候，它会在 B+ 树索引的基础上再创建一个 Hash 索引，这样让 B+ 树也具备了 Hash 索引的优点。
 
-分析步骤：
+InnoDB 三大关键特性：插入缓冲（Insert Buffer）、二次写(Double Write)、自适应 Hash。
 
-1. 观察，至少跑一天，看看生产的慢 SQL 情况；
-2. 开启慢查询日志，设置阈值，比如超过 5s 的就是慢 SQL，并将它抓取出来；
-3. `explain`+ manSQL 分析；
-4. show profile；
-5. 运维经理或 DBA 进行 SQL 数据库服务器的参数调优。
+# 数据库调优
 
-总结：
+数据库调优的目的就是要让数据库运行得更快，也就是说响应的时间更快，吞吐量更大。
 
-1. 慢查询的开启并捕获；
-2. `explain`+manSQL 分析；
-3. `show profile` 查询 SQL 在 MySQL 服务器里面的执行细节和声明周期情况；
-4. SQL 数据库服务器的参数调优。
+数据库调优的选择维度：
+
+- 选择合适的 RDBMS
+  - 对事务性处理以及安全性要求高的话，可以选择商业的数据库产品。
+- 优化表的设计
+- SQL 查询优化
+  - 逻辑查询优化：通过改变 SQL 语句让 SQL 执行效率更高效，采用的方式是对 SQL 语句进行等价变换，对查询进行重写。
+  - 物理查询优化：将逻辑查询的内容变成可以被执行的物理操作符，从而为后续执行器的执行提供准备。
+    - 核心是高效地建立索引，并通过这些索引来做各种优化。
+- 使用 Redis 或 Memcached 作为缓存
+- 库级优化
+  - 控制一个库中的数据表数量、采用主从架构优化读写策略、分库分表
 
 # 数据导入/出
 

@@ -92,7 +92,8 @@ CREATE TABLE  [IF EXISTS] table_name(
   列名 列的数据类型（长度） [ 列的约束 ],
   。。。
   列名 列的数据类型（长度） [ 列的约束 ] -- 这里不能有逗号
-);
+)ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+-- 最后面是对表的约束，字符编码设置为 utf8，排序规则为 utf8_general_ci，行格式为 Dynamic
 ```
 
 查看表的结构信息：`describe table_name` 或 `desc table_name`。

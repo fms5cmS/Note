@@ -36,7 +36,7 @@ func TestSplit(t *testing.T) {
 }
 ```
 
-命令行运行：`go test -coverprofile=cover.out` 在测试的同时获取代码覆盖报告并输出到 c.out 文件中
+命令行运行：`go test -cover profile=cover.out` 在测试的同时获取代码覆盖报告并输出到 c.out 文件中
 
 - `go tool cover -func=c.out` 列出每个函数的代码覆盖率
 - `go tool cover -html=c.out` 在网页查看代码覆盖信息

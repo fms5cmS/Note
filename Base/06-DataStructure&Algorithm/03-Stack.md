@@ -11,23 +11,28 @@
 栈的应用：
 
 - 递归
-- 树和图的深度有限搜索
+- 树和图的深度优先搜索
 - 十进制数转二进制数
 - 撤销
-- 表达式求值：使用两个栈，一个保存操作数，另一个是保存运算符
-
-  - 从左向右遍历表达式，遇到数字，就将其压入操作数栈；遇到运算符，就与运算符栈的栈顶元素进行比较
-  - 如果比运算符栈顶元素的优先级高，就将当前运算符压入栈；
-  - 如果比运算符栈顶元素的优先级低或者相同，从运算符栈中取栈顶运算符，从操作数栈的栈顶取 2 个操作数，然后进行计算，再把计算完的结果压入操作数栈，继续比较
+- 用栈实现**表达式求值**功能（使用两个栈，分别保存操作数、运算符）
+  - 从左向右遍历表达式
+    - 遇到数字，压入操作数栈
+    - 遇到运算符，与运算符栈的栈顶元素比较
+      - 当前运算符优先级 > 栈顶运算符优先级，当前运算符入栈
+      - 当前运算符优先级 <= 栈顶运算符优先级，从操作数栈中取出两个元素，然后取出栈顶运算符对两个元素进行计算，将结果压入操作数栈，并继续比较当前运算符与新的栈顶运算符
+  - 遍历完成后，根据两个栈剩余的元素进行计算即可得到表达式的结果
 
 - 函数调用栈
   - 从调用函数到被调用函数，对于数据而言，变化的是作用域，所以，只要保证每进入一个新的函数，都是一个新的作用域就可以。而这个用栈实现很方便。
   - 在进入被调用函数的时候，分配一段栈空间给这个函数的变量，在函数结束的时候，将栈顶复位，正好回到调用函数的作用域内。
-- 括号匹配
-  - 扫描到左括号就入栈，扫描到右括号就出栈。
-  - 扫描过程中：
-    - 左括号和右括号不匹配、栈中没有与右括号匹配的左括号、右括号扫描结束后栈中不为空，这三种情况说明扫描的内容是非法格式
-    - 所有括号扫描结束后栈为空，则扫描的内容为合法格式
+- 用栈实现**括号匹配**功能（使用一个栈保存未匹配的左括号）
+  - 扫描到左括号，就入栈
+  - 扫描到右括号，就出栈，并比较出栈元素（左括号）与右括号是否匹配
+  - 括号不匹配的情形：
+    - 出栈元素与右括号不匹配，如出栈的是 [，而右括号则是 )
+    - 右括号没有进行匹配的元素（右括号比左括号多）
+    - 右括号扫描结束后栈中不为空（左括号比右括号多）
+  - 所有括号扫描结束后，栈为空，则所有的括号都是相匹配的
 - 浏览器的前进、后退功能
   - 把首次浏览的页面依次压入栈 X 中（X 的栈顶元素代表的页面为当前所在页面）
   - 点击后退时，从 X 出栈并放入栈 Y 中
@@ -42,43 +47,42 @@
 - 链式栈：头节点为栈底，尾节点为栈顶。
 
 ```go
-type Stack struct {
+type ArrayStack struct {
 	data []interface{}
-	// 栈顶指针
-	top  int
+	top  int   // // 栈顶指针
 }
 
-func (s *Stack) String() string {
+func (s ArrayStack) String() string {
 	if len(s.data) == 0{
 		return "nothing"
 	}
-	return fmt.Sprint("Stack: ", s.data, "top")
+	return fmt.Sprint("Stack: ", s.data, " top")
 }
 
-func NewStack() Stack {
-	return Stack{
+func NewStack() ArrayStack {
+	return ArrayStack{
 		data: make([]interface{}, 0),
 		top:  -1,
 	}
 }
 
-func (s *Stack) Push(x interface{}) {
+func (s *ArrayStack) Push(x interface{}) {
 	s.data = append(s.data, x)
 	s.top++
 }
 
-func (s *Stack) Pop() interface{} {
+func (s *ArrayStack) Pop() interface{} {
 	ret := s.data[s.top]
 	s.data = s.data[0:s.top]
 	s.top--
 	return ret
 }
 
-func (s *Stack) Peek() interface{} {
+func (s *ArrayStack) Peek() interface{} {
 	return s.data[s.top]
 }
 
-func (s *Stack) Size() interface{} {
+func (s *ArrayStack) Size() interface{} {
 	return len(s.data)
 }
 ```
