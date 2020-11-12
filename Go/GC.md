@@ -26,7 +26,7 @@ Go 的 Allocator 会根据申请分配的内存大小选择不同的处理逻辑
 
 # 标准三色标记法
 
-Golang 使用的“三色标记法”是在标记-清除(Mark-Sweep)算法的改进，GC 过程和其他用户 goroutine 可并发运行，但仍需要一定时间的 STW(stop the world)
+Golang 使用的[三色标记法](https://blog.golang.org/ismmkeynote)是在标记-清除(Mark-Sweep)算法的改进，GC 过程和其他用户 goroutine 可并发运行，但仍需要一定时间的 STW(stop the world)
 
 三色标记算法将程序中的对象分为白色、黑色、灰色三类：
 
