@@ -64,18 +64,17 @@ func BubbleSort(nums []int, len int) {
 		return
 	}
 	for i := len - 1; i >= 1; i-- {
-		sorted := true  // 假定有序
-		// 大于 i 之后的值都是已经排好序的，不必再进行比较
+		// 假定未排序区间内元素有序
+		sorted := true
 		for j := 0; j < i; j++ {
 			if nums[j] > nums[j+1] {
 				nums[j], nums[j+1] = nums[j+1], nums[j]
-				// 发生了交换，则说明无序。之前的假定失败
+				// 发生了交换，则说明未排序区间内元素无序
 				sorted = false
 			}
 		}
-		// 减少外循环次数
 		if sorted {
-			break
+			break  // 未排序区间元素有序，所有元素已排序完成，退出循环
 		}
 	}
 }

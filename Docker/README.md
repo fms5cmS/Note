@@ -149,8 +149,8 @@ docker ps -a  # 会发现 centos 容器已经退出了
 # 创建一个名为 mysql01 的容器
 docker run --name mysql01 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 -d mysql:5.7
 # 创建新的容器 blog，并与 mysql01 链接
-docker run --name blog--link mysql01:mysql -p 8000:8000 blog-docker
-# 在 blog 中，mysql 和 mysql01 都可以作为 mysql01 的 hostname 对其进行访问7，而不通过 IP
+docker run --name blog --link mysql01:mysql -p 8000:8000 blog-docker
+# 在 blog 中，mysql 和 mysql01 都可以作为 mysql01 的 hostname 对其进行访问，而不通过 IP
 ```
 
 `--link` 只能解决单机容器间的关联，在分布式多机的情况下，需要通过别的方式进行连接！

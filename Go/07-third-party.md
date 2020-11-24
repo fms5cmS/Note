@@ -100,6 +100,233 @@ func fill() {
 
 [go-ini](https://ini.unknwon.io/)，从 ini 格式的文件中读取配置。
 
+# ORM
+
+对象关系映射(ORM)。[GORM](https://gorm.io/) 和 Xorm 是 Go 中最流行的两个 ORM 库，前者更常用。
+
+```shell
+# 下载 gorm
+go get -u github.com/jinzhu/gorm
+# 下载 mysql 驱动
+go get -t -v github.com/go-sql-driver/mysql/...
+```
+
+## 全局 DB
+
+注：代码中需导入数据库驱动！以 MySQL 为例如：
+
+```go
+import (
+	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"sync"
+)
+
+var (
+	db   *gorm.DB
+	once = new(sync.Once)
+)
+
+func init() {
+	once.Do(func() {
+		var (
+			host, user, password, dbname, url string
+			err error
+		)
+		viper.SetConfigName("conf")
+		viper.AddConfigPath("./")
+		if err := viper.ReadInConfig(); err != nil {
+			logrus.Errorf("load config error: %v", err)
+		}
+		host = viper.GetString("mysql.host")
+		user = viper.GetString("mysql.user")
+		password = viper.GetString("mysql.password")
+		dbname = viper.GetString("mysql.dbname")
+		url = fmt.Sprintf("%s:%s@(%s)/%s?charset=utf8&parseTime=True&loc=Local", user, password, host, dbname)
+		db, err = gorm.Open("mysql", url)
+		if err != nil {
+			panic("failed to connect database")
+		}
+		// 开启日志
+		db.LogMode(true)
+		// 全局禁用表名复数,如果设置为 true, `User` 的默认表名为 `user`,否则表名就是 `users`
+		db.SingularTable(true)
+	})
+}
+```
+
+## struct
+
+- 用于保存查询结果
+
+```go
+type Hero struct {
+	ID          uint64
+	Name        string
+	RoleMain    string
+  // 这里的标签用于指定该字段对应表中哪个字段
+  // 默认情况示例：RoleMain 对应表中的 role_main
+	Birthday    time.Time `gorm:"column:birthdate"`
+	HpMax       float32
+	MpMax       float32
+	AttackMax   float32
+	DefenseMax  float32
+	AttackSpeed float32 `gorm:"column:attack_speed_max"`
+	AttackRange string
+}
+```
+
+- 用于记录查询条件
+
+```go
+type heroArgs struct {
+	ID       uint64
+	Name     string
+	RoleMain string
+}
+```
+
+## 填充查询结果
+
+填充时只能向 struct 和 slice 中填充
+
+- `First()` 仅查询符合条件的第一条记录
+- `Last()` 进查询符合条件的最后一条记录
+
+由于创建返回结构体时使用 `new()` 来创建的，所以填充时不用取地址，否则要使用 `&hero`！
+
+```go
+func (h *heroArgs) QueryFirst() (*Hero, error) {
+	hero := new(Hero)
+	// SELECT * FROM `heros` WHERE (id >= 1009) ORDER BY `heros`.`id` ASC LIMIT 1
+	err := db.Table("heros").Where("id >= ?", h.ID).First(hero).Error
+	return hero, err
+}
+
+func (h *heroArgs) QueryLast() (*Hero, error) {
+	hero := new(Hero)
+	// SELECT * FROM `heros`  WHERE (role_main = '法师') ORDER BY `heros`.`id` DESC LIMIT 1
+	err := db.Table("heros").Where("role_main = ?", h.RoleMain).Last(hero).Error
+	return hero,err
+}
+```
+
+- `Find()` 查询所有符合条件的记录，注意是 `Find(&heroes)`
+
+```go
+func (h *heroArgs) QueryFind() ([]*Hero, error) {
+	heroes := make([]*Hero, 0)
+	// SELECT * FROM `heros`  WHERE (role_main = '战士' AND id > 10029)
+	err := db.Table("heros").Where("role_main = ? AND id > ?", 
+                                 h.RoleMain, h.ID).Find(&heroes).Error
+	return heroes, err
+}
+```
+
+## 查询条件
+
+- `Where()` 中指定查询条件
+
+```go
+db.Where("name IN (?)", []string{"jinzhu", "jinzhu 2"}).Find(&users)
+db.Where("name LIKE ?", "%jin%").Find(&users)
+db.Where("name = ? AND age >= ?", "jinzhu", "22").Find(&users)
+// 也可以传入结构体或 map
+// 注意：传入结构体时，gorm 仅使用字段值为**非零值**的字段作为查询条件！！
+// SELECT * FROM users WHERE name = "jinzhu";
+db.Where(&User{Name: "jinzhu", Age: 0}).Find(&users)
+// SELECT * FROM users WHERE name = "jinzhu" AND age = 0;
+db.Where(map[string]interface{}{"name": "jinzhu", "age": 0}).Find(&users)
+```
+
+- `NOT()`、`Or()` 不常使用，见[官网](https://v1.gorm.io/docs/query.html)
+
+## 其他
+
+- `Order()` 排序，注意：该方法必须是在填充结果之前！
+
+```go
+// SELECT * FROM users ORDER BY age desc, name;
+db.Order("age desc, name").Find(&users)
+// 重排序
+// users1：SELECT * FROM users ORDER BY age desc;
+// users2：SELECT * FROM users ORDER BY age;
+db.Order("age desc").Find(&users1).Order("age", true).Find(&users2)
+```
+
+- `Group()`、`Having()` 分组
+
+```go
+func (h *heroArgs) QueryGroupByRole() ([]int, []string) {
+	count, role := make([]int, 0), make([]string, 0)
+	// SELECT COUNT(1) num, role_main FROM heros GROUPBY role_main HAVING (num > 10)
+	rows, _ := db.Table("heros").Select("COUNT(1) num, role_main").Group("role_main").Having("num > ?", 10).Rows()
+	for rows.Next() {
+		c, r := 0, ""
+		rows.Scan(&c, &r)
+		count = append(count, c)
+		role = append(role, r)
+	}
+	return count, role
+}
+
+type Result struct {
+	Num  int
+	Role string
+}
+
+func (h *heroArgs) QueryGroup() ([]Result, error) {
+	results := make([]Result, 0)
+	// SELECT count(1) num, role_main role FROM `heros`   GROUP BY role
+  // 以下两种写法都可以
+	// err := db.Table("heros").Select("count(1) num, role_main role").Group("role").Scan(&results).Error
+	err := db.Table("heros").Select("count(1) num, role_main role").Group("role").Find(&results).Error
+	return results, err
+}
+```
+
+- `Limit()` 指定查询多少条记录
+
+```go
+// SELECT * FROM users LIMIT 3;
+db.Limit(3).Find(&users)
+```
+
+- `Offset()` 指定跳过多少条记录
+
+```go
+// SELECT * FROM users OFFSET 3;
+db.Offset(3).Find(&users)
+```
+
+- `SubQuery()` 子查询
+
+```go
+func (h *heroArgs) QuerySub() ([]*Hero, error) {
+	heroes := make([]*Hero, 0)
+  // SELECT * FROM `heros`  WHERE (id > (SELECT AVG(id) FROM `heros`)) 
+	err := db.Table("heros").Where("id > ?",db.Table("heros").Select("AVG(id)").SubQuery()).
+  	Find(&heroes).Error
+	return heroes, err
+}
+```
+
+- `Count()` 计数
+
+```go
+func (h *heroArgs) QueryManyAndCount() ([]*Hero, int, error) {
+	heroes := make([]*Hero, 0)
+	count := 0
+  // SELECT * FROM `heros`  WHERE (id > 10029)
+  // SELECT count(*) FROM `heros`  WHERE (id > 10029)
+	err := db.Table("heros").Where("id > ?", h.ID).Find(&heroes).Count(&count).Error
+	return heroes, count, err
+}
+```
+
 # 日志相关
 
 [日志记录指导原则](../通用/Log.md)
@@ -113,23 +340,6 @@ Go 语言标准库自带一个日志库：log，但这个库没有日志级别�
 [rs/zerolog](https://github.com/rs/zerolog) 独特的链式 API 允许 Zerolog 避免内存分配和反射来编写 JSON（或 CBOR）日志事件。
 
 [lumberjack](https://github.com/natefinch/lumberjack) 是将日志写入滚动文件中，可以设置单日志文件的最大占用空间、最大生存周期、可保留的最多旧文件数等。如果有超出设置项的情况，则对日志文件进行滚动处理。
-
-# ORM
-
-对象关系映射(ORM)。[GORM](https://gorm.io/) 和 Xorm 是 Go 中最流行的两个 ORM 库，前者更常用。
-
-```shell
-# 下载 gorm
-go get -u github.com/jinzhu/gorm
-# 下载 mysql 驱动
-go get -t -v github.com/go-sql-driver/mysql/...
-```
-
-```go
-
-```
-
-
 
 # 验证
 

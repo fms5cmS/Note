@@ -123,6 +123,8 @@ select * from table_name [where 子句] order by col1 [asc/desc]，col2 [asc/des
 -- 注意：不加 asc 或 desc 时，默认 asc 升序；where子句和order by不能调换顺序
 ```
 
+可以用 `select` 后面没有的列进行排序。
+
 # 分组
 
 在做统计的时候，可能需要先对数据按照不同的数值进行分组，然后对这些分好的组进行聚集统计。
@@ -152,16 +154,7 @@ SELECT column1, ... ,function(column) FROM table
 
 示例：
 
-简单的分组查询：
-
-```sql
--- 案例1：查询每个工种的员工平均工资
-SELECT AVG(salary),job_id FROM employees GROUP BY job_id;
--- 案例2：查询每个位置的部门个数
-SELECT COUNT(*),location_id FROM departments GROUP BY location_id;
-```
-
-可以实现分组前的筛选：
+分组前的筛选：
 
 ```sql
 -- 案例1：查询邮箱中包含a字符的 每个部门的平均工资
@@ -169,23 +162,24 @@ SELECT AVG(salary),department_id FROM employees
 WHERE email LIKE '%a%'
 GROUP BY department_id;
 -- 案例2：查询有奖金的每个领导手下员工的最高工资
-SELECT MAX(salary),manager_id FROM employees WHERE commission_pct IS NOT NULL GROUP BY manager_id;
+SELECT MAX(salary),manager_id FROM employees 
+WHERE commission_pct IS NOT NULL 
+GROUP BY manager_id;
 ```
 
 添加分组后的筛选：
 
 ```sql
--- 案例1：查询哪个部门的员工个数>5
-    #① 查询每个部门的员工个数
-SELECT COUNT(*),department_id FROM employees GROUP BY department_id;
-    #② 筛选刚才①结果
-SELECT COUNT(*),department_id FROM employees
-GROUP BY department_id
-HAVING COUNT(*)>5;
--- 案例2：每个工种有奖金的员工的最高工资>12000的工种编号和最高工资
-SELECT job_id,MAX(salary) FROM employees WHERE commission_pct IS NOT NULL GROUP BY job_id HAVING MAX(salary)>12000;
--- 案例3：领导编号>102的每个领导手下的最低工资大于5000的领导编号和最低工资
-SELECT MIN(salary),manager_id FROM employees WHERE manager_id>102 GROUP BY manager_id HAVING MIN(salary)>5000;
+-- 案例1：每个工种有奖金的员工的最高工资>12000的工种编号和最高工资
+SELECT job_id,MAX(salary) FROM employees 
+WHERE commission_pct IS NOT NULL 
+GROUP BY job_id 
+HAVING MAX(salary)>12000;
+-- 案例2：领导编号>102的每个领导手下的最低工资大于5000的领导编号和最低工资
+SELECT MIN(salary),manager_id FROM employees 
+WHERE manager_id>102 
+GROUP BY manager_id 
+HAVING MIN(salary)>5000;
 ```
 
 按表达式或函数分组：

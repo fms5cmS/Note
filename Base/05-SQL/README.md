@@ -44,42 +44,14 @@
 
 # SQL 执行顺序
 
-写出来的 SQL：
-
 ```sql
-SELECT DISTINCT  查询列表
-FROM 表1 关联类型 JOIN 表2 ON 关联条件
-WHERE 筛选条件1
-GROUP BY　分组的依据字段
-HAVING 筛选条件2
-ORDER BY 排序条件
-LIMIT 截取条件
-```
-
-而在经过服务层时，MySQL 的阅读顺序是：
-
-```sql
-FROM 子句组装数据（包括通过ON进行连接）
-WHERE 子句进行条件筛选
-GROUP BY 分组
-使用聚集函数进行计算；
-HAVING 筛选分组；
-计算所有的表达式；
-SELECT 的字段；
-ORDER BY排序
-LIMIT筛选
-```
-
-如：
-
-```sql
-SELECT DISTINCT player_id, player_name, count(*) as num # 顺序5
-FROM player JOIN team ON player.team_id = team.team_id # 顺序1
-WHERE height > 1.80 # 顺序2
-GROUP BY player.team_id # 顺序3
-HAVING num > 2 # 顺序4
-ORDER BY num DESC # 顺序6
-LIMIT 2 # 顺序7
+SELECT DISTINCT player_id, player_name, count(*) as num -- 顺序5
+FROM player JOIN team ON player.team_id = team.team_id  -- 顺序1
+WHERE height > 1.80                                     -- 顺序2
+GROUP BY player.team_id                                 -- 顺序3
+HAVING num > 2                                          -- 顺序4
+ORDER BY num DESC                                       -- 顺序6
+LIMIT 2                                                 -- 顺序7
 ```
 
 ![](../../images/MySQL-parser.png)

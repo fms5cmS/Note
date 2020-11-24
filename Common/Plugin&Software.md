@@ -1,5 +1,3 @@
-常用插件&软件：
-
 # Windows
 
 ## Wox
@@ -48,9 +46,3 @@
 - .ignore
 - Markdown Navigator
 - Translation
-- 在建立 MySQL 连接时，url 的参数之间使用 & 分开，示例：
-  - - 可以参照：<https://blog.csdn.net/booloot/article/details/76223004> 
-
-```properties
-url=jdbc:mysql://localhost:3306/mybatis?serverTimezone=UTC&useSSL=false
-```

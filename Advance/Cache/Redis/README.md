@@ -1,5 +1,11 @@
 # 简介
 
+一个最简单的键值数据库需要包括访问框架、索引模块、操作模块、存储模块。
+
+- 访问模式通常有两种：
+  - 通过函数库调用的方式供外部应用使用；
+  - 通过网络框架以 Socket 通信的形式对外提供键值对操作
+
 Redis(REmote Dictionary Server) 远程字典服务器。开源免费，C语言编写的高性能的KV键值分布式内存数据库，基于内存运行，并支持持久化的 NoSQL 数据库。
 
 - 速度快：数据保存在内存、底层使用C语言、单线程；
@@ -251,36 +257,4 @@ Redis被配置为保存数据库快照，但它目前不能持久化到硬盘。
 
 - `include /path/to/local.conf`指定包含其它的配置文件，可以在同一主机上多个Redis实例之间使用同一份配置文件，而同时各个实例又拥有自己的特定配置文件
 
-
-
-# LUA脚本
-
-Lua 是一个小巧的[脚本语言](http://baike.baidu.com/item/%E8%84%9A%E6%9C%AC%E8%AF%AD%E8%A8%80)，Lua脚本可以很容易的被C/C++ 代码调用，也可以反过来调用C/C++的函数。LUA脚本在Redis中的优势：
-
-- 将复杂的或者多步的redis操作，写为一个脚本，一次提交给redis执行，减少反复连接redis的次数。提升性能；
-- LUA脚本是类似redis事务，有一定的原子性，不会被其他命令插队，可以完成一些redis事务性的操作。
-
-
-
-# Redis Desktop Manager
-
-使用Redis Desktop Manager连接虚拟机上的Redis时，可能会由于端口未开放而导致连接失败。
-
-1. 查询对应的端口是否已经开启,以设置的6379端口为例
-
-   ```shell
-   firewall-cmd --query-port=6379/tcp
-   ```
-
-2. 显示为 no，则开启端口：
-
-   ```shell
-   firewall-cmd --zone=public --add-port=6379/tcp --permanent
-   ```
-
-3. 如果没有重启防火墙就查询6379端口，则依然显示没有开启，重启防火墙之后显示端口重启成功。重启：
-
-   ```shell
-   firewall-cmd --reload
-   ```
 

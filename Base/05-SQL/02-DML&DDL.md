@@ -87,14 +87,16 @@ DDL 数据定义语言，**针对表或库的结构进行增删改**
 ## 表的创建
 
 ```sql
-CREATE TABLE  [IF EXISTS] table_name(
-  列名 列的数据类型（长度） [ 列的约束 ],
-  列名 列的数据类型（长度） [ 列的约束 ],
+CREATE TABLE  [IF NOT EXISTS] table_name(
+  列名 类型（长度） [ 约束 ],
+  列名 类型（长度） [ 约束 ],
   。。。
-  列名 列的数据类型（长度） [ 列的约束 ] -- 这里不能有逗号
+  列名 类型（长度） [ 约束 ] -- 这里不能有逗号
 )ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
--- 最后面是对表的约束，字符编码设置为 utf8，排序规则为 utf8_general_ci，行格式为 Dynamic
+-- 表的约束，字符编码为 utf8，排序规则为 utf8_general_ci，代表对大小写不敏感，行格式为 Dynamic
 ```
+
+建表时可以对表名和字段名加上反引号，避免与 MySQL 保留字段相同。
 
 查看表的结构信息：`describe table_name` 或 `desc table_name`。
 

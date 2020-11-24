@@ -31,6 +31,8 @@ nginx -V            # 显示 Nginx 的版本，编译器版本和配置参数。
 
 平滑重启：`kill -HUP pid号`（pid 号可使用`ps -ef|grep nginx`查询得到 Nginx 的主进程号）
 
+默认配置文件是 /usr/local/nginx/conf/nginx.conf。
+
 # 热部署
 
 在启动 Nginx 的情况下，想要更换 Nginx 的版本：
