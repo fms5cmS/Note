@@ -43,9 +43,11 @@ func TestSplit(t *testing.T) {
 
 # compile
 
-`go tool compile`
+`go tool compile` 把 go -> 编译 -> .o 文件
 
-- `-m file.go` 打印编译优化信息
+补充：`go tool objdump` 把可执行文件 -> 反编译 -> 汇编
+
+- `-m file.go` 打印编译优化信息（逃逸分析等）
 
 ```go
 package main
@@ -67,6 +69,57 @@ main.go:5:11: main s1 + "yxz" does not escape
 main.go:6:28: main s1 + "y" + s1 + "z" + s1 does not escape
 main.go:7:33: main s1 + "y" + s1 + "z" + s1 + "z" does not escape
 ```
+
+- `-m=2` 还可以打印闭包函数的变量捕获、函数的内联调试信息（如不能内联的原因）、逃逸分析信息等
+
+```go
+package main
+
+import "fmt"
+
+// 变量捕获主要是针对闭包场景而言的，对于闭包函数引用闭包外的变量，需要明确在闭包中通过值引用或地址引用的方式来捕获变量。
+// go tool compile -m=2 main.go | grep capturing
+// main.go:14:15: main.func1 capturing by ref: a (addr=true assign=true width=8)
+// main.go:14:18: main.func1 capturing by value: b (addr=false assign=false width=8)
+// 变量 a 在闭包之后进行了其他赋值操作
+// 可以看出，这个闭包程序中，是通过地址引用的方式对变量 a 进行操作的；而对变量 b 的引用则是通过直接值传递的方式进行
+func main() {
+	a, b := 1, 2
+	go func() {
+		fmt.Println(a, b)
+	}()
+	a = 99
+}
+```
+
+```go
+package main
+
+func small() string {
+	s := "hello, " + "world"
+	return s
+}
+
+func fib(index int) int {
+	if index < 2 {
+		return index
+	}
+	return fib(index-1) + fib(index-2)
+}
+
+// go tool compile -m=2 main.go
+// main.go:3:6: can inline small with cost 7 as: func() string { s := "hello, world"; return s }
+// main.go:8:6: cannot inline fib: recursive
+// 可以看出，small 函数可以被内联而 fib 函数由于是递归函数所以不能被内联
+// 可以在 small 函数前增加 //go:noinline 再看一下调试信息
+func main() {
+	small()
+	fib(65)
+}
+```
+
+
+
 
 - `-S file.go` 查看代码编译后的汇编代码
   - 注意，此时输出的汇编代码还没有链接，呈现的地址都是偏移量

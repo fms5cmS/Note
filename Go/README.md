@@ -10,6 +10,24 @@
 
 [教程](http://topgoer.com/)
 
+## 多个版本
+
+https://golang.org/doc/manage-install
+
+正常安装一个版本后，
+
+```shell
+# 通过 go get 指定特定的版本，如 1.16 版本
+go get golang.org/dl/go1.16
+# 此时在 $GOPATH/bin 下会有一个 go1.16 的可执行文件
+# 下载 sdk，SDK 会下载到 $HOME/sdk 目录下！！之后 GoLand 需要在配置中的 GOROOT 中找到该 SDK
+go1.16 download
+# 验证是否下载成功
+go1.16 version
+```
+
+
+
 # 代码组织
 
 Go 语言是通过包（目录）来组织代码的。环境变量 GOPATH 指向的目录是工作目录，该变量可以包含多个目录路径，Windows 下，多个值之间使用`;`来分隔，Unix 下，值之间使用`:`分隔。每个路径代表一个工作区（workspace）。工作区下的目录结构：
@@ -144,6 +162,8 @@ pkg/
 
 [Go Modules 终极入门](https://mp.weixin.qq.com/s/fNMXfpBhBC3UWTbYCnwIMg)
 
+[Go module 官方文档](https://golang.org/ref/mod)
+
 视频可以看：youtu.be/F8nrpe0XWRg
 
 - 一个开关环境变量：GO111MODULE
@@ -168,11 +188,11 @@ pkg/
 ```shell
 go mod init	 # 生成 go.mod 文件，可以指定模块导入路径，如：go mod init github.com/eddycjy/module-repo
 go mod download	# 下载 go.mod 文件中指明的所有依赖
-go mod tidy	# 整理现有的依赖
+go mod tidy	# 修改 go.mod 和 go.sum 以匹配实际依赖
 go mod graph	# 查看现有的依赖结构
 go mod edit	# 编辑 go.mod 文件
-go mod vendor	# 导出项目所有的依赖到vendor目录
-go mod verify	# 校验一个模块是否被篡改过
+go mod vendor	# 增加 build&test 依赖到vendor 文件夹下
+go mod verify	# 校验本地缓存的文件自下载后是否被篡改过
 go mod why	# 查看为什么需要依赖某模块
 ```
 
@@ -269,6 +289,7 @@ github.com/gin-gonic/gin v1.3.0/go.mod h1:7cKuhb5qV2ggCFctp2fJQ+ErvciLZrIeoOSOm6
    go env -w GOBIN=$HOME/bin
    go env -w GO111MODULE=on
    go env -w GOPROXY=https://goproxy.cn,direct
+   iam59!z$
    ```
 
 3. 可选：按照喜欢的目录结构重新组织项目
@@ -331,6 +352,12 @@ Go modules 在主版本号为 v0 和 v1 的情况下省略了版本号(强制性
 | v0.0.0 | github.com/eddycjy/mquote    |
 | v1.0.0 | github.com/eddycjy/mquote    |
 | v2.0.0 | github.com/eddycjy/mquote/v2 |
+
+# MVS
+
+[Minimal Version Selection](https://research.swtch.com/vgo-mvs) 是构建 main module 时每个依赖的版本选择算法。
+
+遍历找到每个 module 最大的版本，这些版本的 module 就是满足所有需求的最小版本。 
 
 # 内存对齐
 
@@ -404,3 +431,174 @@ cgo：
 Windows 安装 GCC-64：进入[离线安装包](https://sourceforge.net/projects/mingw-w64/files/)，选择下面的 GCC 版本的链接即可开始下载，解压后将 bin 目录加入环境变量中
 
 通过 `import "C"` 语句启用 CGO 特性，同时包含 C 语言的 <stdio.h> 头文件。`go build` 命令会在编译和链接阶段启动 gcc 编译器。
+
+# 调试
+
+## dlv
+
+Delve 是 Go 程序的源代码级调试器，是 Go 实现的。能够通过控制流程的执行与程序进行交互，查看变量，提供线程、goroutine、CPU 状态等信息。
+
+```shell
+# Go 1.16 及以上版本时
+go install github.com/go-delve/delve/cmd/dlv@latest
+# 也可以通过 git clone 方式安装
+git clone https://github.com/go-delve/delve
+cd delve
+go install github.com/go-delve/delve/cmd/dlv
+# 安装完成后，查看
+dlv version
+```
+
+使用：
+
+```shell
+dlv exec ./xx   # 后面是可执行文件的路径，对该程序进行调试
+h  # help 操作
+si # step-instruction 单步执行一条 CPU 指令
+b xx # break 打断点，后面可以是函数名，如：b procresize，可以是 *地址，如：b *0x455780，可以是 文件名:行数，如 b main.go:6
+c  # continue 跳转到下一个断点处
+bt # 可以查看调用栈，从下面调用上面
+n  # next 单步执行程序的下一步
+disass # 反汇编	
+```
+
+
+
+示例代码：
+
+```go
+package main
+
+import "fmt"
+
+// 反转字符串
+func Reverse(s string) string {
+	r := []rune(s)
+	for i, j := 0, len(r)-1; i < len(r)/2; i, j = i+1, j-1 {
+		r[i], r[j] = r[j], r[i]
+	}
+	return string(r)
+}
+
+func main() {
+	fmt.Println(Reverse("猜猜看"))
+}
+```
+
+
+
+```shell
+# 在目录下进入 dlv 的 debug 模式交互
+$ dlv debug .
+# 使用关键字 b（break） 对 main.main 方法设置断点
+(dlv) b main.main
+Breakpoint 1 set at 0xb065ba for main.main() ./main.go:14
+# 使用关键字 c（continue）跳转到下一个断点处，在断点处可以看到代码块、goroutine、CPU 寄存器地址等运行时信息
+(dlv) c
+> main.main() ./main.go:14 (hits goroutine(1):1 total:1) (PC: 0xb065ba)
+     9:                 r[i], r[j] = r[j], r[i]
+    10:         }
+    11:         return string(r)
+    12: }
+    13: 
+=>  14: func main() {
+    15:         fmt.Println(Reverse("猜猜看"))
+    16: }
+# 使用关键字 n（next）单步执行程序的下一步，可以看到调用了 Reverse() 方法
+(dlv) n
+> main.main() ./main.go:15 (PC: 0xb065c8)
+    10:         }
+    11:         return string(r)
+    12: }
+    13: 
+    14: func main() {
+=>  15:         fmt.Println(Reverse("猜猜看"))
+    16: }
+# 使用关键字 s（step）进入到函数中继续调试
+(dlv) s
+> main.Reverse() d:/modules/local/test/questions/dlv/main.go:6 (PC: 0xb0638a)
+     1: package main
+     2: 
+     3: import "fmt"
+     4: 
+     5: // 反转字符串
+=>   6: func Reverse(s string) string {
+     7:         r := []rune(s)
+     8:         for i, j := 0, len(r)-1; i < len(r)/2; i, j = i+1, j-1 {
+     9:                 r[i], r[j] = r[j], r[i]
+    10:         }
+    11:         return string(r)
+# 使用关键字 p（print）打印所传入变量 s 的值
+(dlv) p s
+"猜猜看"
+# 针对 Reverse() 方法交换值得位置继续打断点查看
+(dlv) b 9
+Breakpoint 2 set at 0xb0643a for main.Reverse() ./main.go:9
+# 继续查看
+(dlv) c
+> main.Reverse() ./main.go:9 (hits goroutine(1):1 total:1) (PC: 0xb0643a)
+     5: // 反转字符串
+     6: func Reverse(s string) string {
+     7:         r := []rune(s)
+     8:         for i, j := 0, len(r)-1; i < len(r)/2; i, j = i+1, j-1 {
+=>   9:                 r[i], r[j] = r[j], r[i]
+    10:         }
+    11:         return string(r)
+    12: }
+    13: 
+# 执行关键字 locals，可以看到对应得变量值，并以此分析程序是否符合预期
+(dlv) locals
+r = []int32 len: 3, cap: 32, [...]
+j = 2
+i = 0
+# 执行关键字 set 针对特定变量设置期望得值
+(dlv) set i = 1
+(dlv) locals
+r = []int32 len: 3, cap: 32, [...]
+j = 2
+i = 1
+# 排查完后，执行关键字 r（reset）重置整个调试，比如上面设置得变量值就会恢复
+(dlv) r
+Process restarted with PID 8876
+# 指定关键字 bp 查看设置的断点情况
+(dlv) bp
+Breakpoint runtime-fatal-throw (enabled) at 0xa7ca00 for runtime.throw() c:/users/xxx/sdk/go1.16/src/runtime/panic.go:1107 (0)
+Breakpoint unrecovered-panic (enabled) at 0xa7cc80 for runtime.fatalpanic() c:/users/xxx/sdk/go1.16/src/runtime/panic.go:1190 (0)
+        print runtime.curg._panic.arg
+Breakpoint 1 (enabled) at 0xb065ba for main.main() ./main.go:14 (0)
+Breakpoint 2 (enabled) at 0xb0643a for main.Reverse() ./main.go:9 (0)
+# 若有些部分已经排除，使用关键之 clearall 对一些断定清除，若不指定断点则会清除所有断点
+(dlv) clearall main.main
+Breakpoint 1 cleared at 0xb065ba for main.main() ./main.go:14
+# exit 退出！
+(dlv) exit
+```
+
+```shell
+# 也可以直接借助函数名进行调试定位
+(dlv) funcs Reverse
+main.Reverse
+(dlv) b Reverse
+Breakpoint 3 set at 0xb0638a for main.Reverse() ./main.go:6
+```
+
+```shell
+# 借助 Go 的公共函数计算
+(dlv) p len(r)-1
+2
+# 借助关键字 vars 查看某个包下所有全局变量的值
+(dlv) vars main
+```
+
+## gdb
+
+GDB 是一个类 UNIX 系统下的程序调试工具，允许你看到另一个程序在执行时 "内部 "发生了什么，或者程序在崩溃时正在做什么。
+
+主要可以做四类事情：
+
+1. 启动你的程序，指定任何可能影响其行为的东西。
+2. 使你的程序在指定的条件下停止。
+3. 检查当你的程序停止时发生了什么。
+4. 改变你程序中的东西，这样你就可以试验纠正一个错误的影响，并继续了解另一个错误。
+
+[学会使用 GDB 调试 Go 代码](https://mp.weixin.qq.com/s/cZoebWQy5smaZac6W7NViw)

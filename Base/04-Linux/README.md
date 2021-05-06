@@ -6,7 +6,7 @@
   - 网络选择桥接模式！
 - 使用 VMware 安装的话，创建一个虚拟机空间（网络连接选择 NAT 模式）。
 
-CentOS7 系统下载见：[阿里云开源镜像](<https://developer.aliyun.com/mirror/>)。
+CentOS7 系统下载见：[阿里云开源镜像](<https://developer.aliyun.com/mirror/>)，[官网](https://www.centos.org/download/)，路径选 isos/x86_64 下的文件
 
 - 这里安装的是：`CentOS-7-x86_64-DVD-1804.iso`：
   - 选择的是含有 GUI 的服务器，并选择了兼容性程序库；

@@ -112,9 +112,6 @@ func FirstGreaterOrEqualElement(nums []int, target int) int {
 	for low <= high {
 		mid := low + (high-low)>>1
 		if nums[mid] >= target {
-			if mid == 0 || nums[mid-1] < target {
-				return mid
-			}
 			high = mid - 1
 		} else {
 			low = mid + 1
