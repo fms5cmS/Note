@@ -67,6 +67,8 @@ docker images
 docker rmi 镜像id
 # 在 Dockerfile 文件所在目录下执行该命令，可以构建镜像，-t 用于给镜像添加标签
 docker build -t 标签
+# 修改镜像 tag
+docker image old_image:old_tag  new_image:new_tag
 ```
 
 检索镜像：
