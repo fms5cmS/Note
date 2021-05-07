@@ -75,6 +75,8 @@ InnoDB 三大关键特性：插入缓冲（Insert Buffer）、二次写(Double W
 
 [TokuDB](https://www.percona.com/doc/percona-tokudb/index.html) 也支持事务，有着出色的**数据压缩功能**，完全兼容 ACID 和 MVCC。如果数据写多读少，且数据量较大，使用 TokuDB 可以节省空间成本，并大幅度降低存储使用量和IOPS开销，不过相应的会增加 CPU 的压力。
 
+https://www.percona.com/doc/percona-server/5.7/tokudb/using_tokudb.html
+
 压缩：TokuDB 会压缩磁盘上的所有数据（包括索引），压缩后通过降低存储需求来减少成本，可以为额外的索引释放磁盘空间，从而提升查询性能，同时，从磁盘中读取和写入磁盘的数据减少，也会提高性能。
 
 快速插入和删除（**Fast Insertions and Deletions**）：TokuDB 采用了叫做分形树（Fractal Tree）的索引结构。
@@ -87,7 +89,14 @@ InnoDB 三大关键特性：插入缓冲（Insert Buffer）、二次写(Double W
 
 在线备份（**Online (Hot) Backup**）：TokuDB 可以在不停机的情况下创建在线数据库的备份。
 
-聚集索引及其他索引提升（**Clustering Keys and Other Indexing Improvements**）：TokuDB 的表是聚集在主键上的，TokuDB 也支持二级聚集索引（clustering secondary keys），二级聚集索引在大范围查询时有更好的性能。TokuDB 的索引最多支持 32 列，且自增列可以在任意的索引及索引内的任意位置。
+聚集索引及其他索引提升（**Clustering Keys and Other Indexing Improvements**）：TokuDB 的表是聚集在主键上的，TokuDB 也支持二级聚集索引（clustering secondary keys），二级聚集索引在大范围查询时有更好的性能。TokuDB 的索引最多支持 32 列，且自增列可以在任意的索引及索引内的任意位置。详见：[introducing_multiple_clustering_indexes](https://www.percona.com/blog/2009/05/27/introducing_multiple_clustering_indexes/)
+
+```sql
+-- 通过关键字 clustering 即可定义聚集索引
+create table foo (a int, b int, clustering key (a)) engine=tokudb;
+alter table foo add clustering index clstr_key(a);
+create clustering index clstr_key on foo(a);
+```
 
 更少的碎片（**Less Aging/Fragmentation**）：TokuDB 可以运行更长的时间，而不需要进行通常的 dump/reload 或 `OPTIMIZE TABLE` 操作来恢复数据库性能。其关键在于，在磁盘上以 Fractal Tree 存储数据。因为默认情况下，相比于 InnoDB 16KB 的大小，Fractal Tree 会以 4MB 的数据块（预压缩）来存储数据，TokuDB 避免数据库混乱（database disorder）的能力比 InnoDB 强 250 倍。可以参考：[Avoiding Fragmentation with Fractal Trees](https://www.percona.com/blog/2010/11/17/avoiding-fragmentation-with-fractal-trees/)
 
