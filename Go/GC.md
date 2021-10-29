@@ -1,18 +1,64 @@
-[Memory Alocator & Collector](../Base/MemoryAllocator_Collector.md)
+[Memory Allocator & Collector](../Base/MemoryAllocator_Collector.md)
+
+内存管理中的三个角色
+
+- Mutator：赋值器，本质上就是指用户态代码，即应用程序，它会不断修改对象的引用关系，即对象图
+- Allocator：内存分配器，负责管理从操作系统分配出的内存空间
+  - malloc 底层就有一个内存分配器的实现
+  - tcmalloc 是 malloc 多线程改进版，Go 中的实现类似 tcmalloc
+- Collector：垃圾收集器，负责清理对象，释放内存空间
 
 # 内存分配
 
-Go 使用的内存分配策略类似于空闲链表分配器中的隔离适应策略，并借鉴了 TCMalloc 的设计实现高速的内存分配，使用多级缓存将对象根据大小分类，并按照类别实施不同的分配策略。
+通常有线性分配器（Bump/Sequential Allocator）和空闲链表分配器（ Free List Allocator）两种实现。
 
-Go 的 Allocator 会根据申请分配的内存大小选择不同的处理逻辑，运行时根据对象的大小将对象分为：
+- Free List Allocator 的算法有以下四种：使用链表串联内存块
+  - First-Fit：每次从链表头开始遍历，第一个满足所申请内存大小的内存块用于分配内存
+  - Next-Fit：从上一次分配成功的链表节点开始遍历，找满足的内存块，遍历到末尾也没有找到会回到链表头遍历，值到将链表的所有内存块都遍历完
+  - Best-Fit：每次从链表头开始完整遍历链表，找到最适合的内存块再分配
+  - Segregated-Fit：分级匹配，将内存块按相同大小分成多级，每次分配时找最接近的
+    - Go 的内存分配器就是这种模式，可以减少分配产生的内存碎片
 
-- 微对象：(0, 16B)
-- 小对象：[16B, 32KB]
-- 大对象：[32KB, +∞]
+Go 使用的内存分配策略类似于空闲链表分配器中的隔离适应策略，并借鉴了 tcmalloc 的设计实现高速的内存分配，使用多级缓存将对象根据大小分类，并按照类别实施不同的分配策略。
+
+Go 的 Allocator 会根据申请分配的内存大小选择不同的处理逻辑，运行时将对象分为以下三类：
+
+- 微对象 Tiny：(0, 16B) 且没有指针（没有指针，因此不需要被垃圾回收器扫描）
+- 小对象 Small：[16B, 32KB] 或有指针
+- 大对象 Large：[32KB, +∞]
 
 因为程序中的绝大多数对象的大小都在 32KB 以下，而申请的内存大小影响 Go 语言运行时分配内存的过程和开销，所以分别处理大对象和小对象有利于提高内存分配器的性能。
 
-与 TCMalloc 相同，Go 运行时分配器也是分级管理内存。
+与 tcmalloc 相同，Go 运行时分配器也是分级管理内存，维护了一个多级结构：
+
+mcache -> mcentral -> mheap
+
+- mcache：与 P 绑定，本地内存分配操作，不需要加锁
+- mcentral：中⼼分配缓存，分配时需要上锁，不同 spanClass（0~66 共 67 种） 使⽤不同的锁
+- mheap：全局唯⼀，从 OS 申请内存，并修改其内存定义结构时，需要加锁，是个全局锁
+
+结合 github 上的去看
+
+微对象的内存分配：
+
+先从当前 P 的 mcache 分配，而 mcache 优先在 tiny 块分配微对象，如果 tiny 块满了或者不够，会向 alloc 找；
+
+alloc 是一个数组，根据 spanClass 来索引，分为有指针（偶数槽，scan 类型）和无指针（奇数槽，noscan 类型）两种，所以该数组长度为 67*2=134。微对象，如果 mcache 用完后都是从 alloc 的第五个槽的 mspan 中划分出一个对象来，然后将其放到 mcache.tiny 的开头位置。如果 alloc 的这个槽已经满了，说明这个 P 本地已经解决不了内存分配的问题了，就需要向 mheap 的 mcentral 中去找；
+
+？？？
+
+```go
+type mcache struct {
+	tiny        uintptr // 指向 tiny 块
+	tinyoffset  uintptr // 指向 tiny 块尾部
+  alloc [numSpanClasses]*mspan
+  // ... 其他字段
+}
+```
+
+小对象的内存分配，相比微对象，不用在 mcache 的 tiny 块找了，直接去 alloc。
+
+大对象的内存分配，会跳过 mcache、mcentral，直接从 mheap 进行相应数量的 page 分配。
 
 参考：[Go 内存分配器的设计与实现](https://mp.weixin.qq.com/s?__biz=MzU5NTAzNjc3Mg==&mid=2247484249&idx=1&sn=72b97a3ad5ca8f8cdd5b3220bd1433aa&chksm=fe795c52c90ed54411ab519fb12587274bba6dd9d46c1e53fe3d79d482fb291667395920ff2a&scene=126&sessionid=1587216036&key=9de0b3367445c6d80fff3cbd3aca01121cf633ba22b9c4563750016eb80ef1178fce23a16a17aac83941fad82114f473f5bc1127c426bf4d3693ee4f4f8592c095f3761f7b6ccfb7fe410fc47e2e9541&ascene=1&uin=MjcyNTczMDYwNw%3D%3D&devicetype=Windows+10&version=62080079&lang=zh_CN&exportkey=A4Kz3iEJX7FzzuKfAOscBgg%3D&pass_ticket=mxvEXT%2Fn8FSArAKzNDqXsxC%2FVkPt4mkJExF3gietPLa3yXsHRy4mJAGNbYcE29ql)、[图解Go语言内存分配](https://www.cnblogs.com/qcrao-2018/p/10520785.html)
 
