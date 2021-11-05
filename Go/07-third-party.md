@@ -25,63 +25,63 @@ address = "sx"
 
 ```go
 type config struct {
-	Language string
-	Host     string
-	Port     int
-	People   Person `mapstructure:"Person"`  // 指定内嵌的结构体类型
+    Language string
+    Host     string
+    Port     int
+    People   Person `mapstructure:"Person"`  // 指定内嵌的结构体类型
 }
 
 type Person struct {
-	Name   string
-	Age    int
-	Height int `mapstructure:"h"` // 字段名与配置文件中的 key 不一致时，指定配置文件中的 key
+    Name   string
+    Age    int
+    Height int `mapstructure:"h"` // 字段名与配置文件中的 key 不一致时，指定配置文件中的 key
 }
 
 type Family struct {
-	Address string
+    Address string
 }
 
 var v = viper.New()
 
 
 func TestReadConfig(t *testing.T) {
-	// 设置配置文件名，不需要带扩展名，便于在不修改代码的情况下替换配置文件的类型
-	v.SetConfigName("configfile")
-	// 设置配置文件类型(可选，viper 会自动判断)
-	v.SetConfigType("toml")
-	// 可以添加多个配置文件的路径
-	v.AddConfigPath("../")
-	v.WatchConfig()  // 监控配置文件
-	v.OnConfigChange(func(e fsnotify.Event) {
-		fmt.Println("config file changed: ", e.Name)
-		fill()
-	})
-	fill()
+    // 设置配置文件名，不需要带扩展名，便于在不修改代码的情况下替换配置文件的类型
+    v.SetConfigName("configfile")
+    // 设置配置文件类型(可选，viper 会自动判断)
+    v.SetConfigType("toml")
+    // 可以添加多个配置文件的路径
+    v.AddConfigPath("../")
+    v.WatchConfig()  // 监控配置文件
+    v.OnConfigChange(func(e fsnotify.Event) {
+        fmt.Println("config file changed: ", e.Name)
+        fill()
+    })
+    fill()
 }
 
 func fill() {
-	// 读取配置文件，会根据不同的文件类型调用不同的解析库进行解析
-	if err := v.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			panic(fmt.Errorf("Can not find config file"))
-		} else {
-			panic(fmt.Errorf("Fatal error config file: %s", err))
-		}
-	}
-	language := v.GetString("language")
-	age := v.GetInt("person.age") // 读取配置文件中的嵌入字段
-	fmt.Printf("language = %d, language = %s\n", age, language)
-	// 将从配置文件中的读取到的配置信息填充到结构体中(含内嵌的结构体！)
-	var conf config
-	if err := v.Unmarshal(&conf); err != nil {
-		panic("error 1")
-	}
-	fmt.Printf("%v\n", conf)
-	var family Family
-	if err := v.UnmarshalKey("family", &family); err != nil {
-		panic("error 2")
-	}
-	fmt.Printf("%v\n", family)
+    // 读取配置文件，会根据不同的文件类型调用不同的解析库进行解析
+    if err := v.ReadInConfig(); err != nil {
+        if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+            panic(fmt.Errorf("Can not find config file"))
+        } else {
+            panic(fmt.Errorf("Fatal error config file: %s", err))
+        }
+    }
+    language := v.GetString("language")
+    age := v.GetInt("person.age") // 读取配置文件中的嵌入字段
+    fmt.Printf("language = %d, language = %s\n", age, language)
+    // 将从配置文件中的读取到的配置信息填充到结构体中(含内嵌的结构体！)
+    var conf config
+    if err := v.Unmarshal(&conf); err != nil {
+        panic("error 1")
+    }
+    fmt.Printf("%v\n", conf)
+    var family Family
+    if err := v.UnmarshalKey("family", &family); err != nil {
+        panic("error 2")
+    }
+    fmt.Printf("%v\n", family)
 }
 ```
 
@@ -117,44 +117,44 @@ go get -t -v github.com/go-sql-driver/mysql/...
 
 ```go
 import (
-	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-	"sync"
+    "fmt"
+    _ "github.com/go-sql-driver/mysql"
+    "github.com/jinzhu/gorm"
+    "github.com/sirupsen/logrus"
+    "github.com/spf13/viper"
+    "sync"
 )
 
 var (
-	db   *gorm.DB
-	once = new(sync.Once)
+    db   *gorm.DB
+    once = new(sync.Once)
 )
 
 func init() {
-	once.Do(func() {
-		var (
-			host, user, password, dbname, url string
-			err error
-		)
-		viper.SetConfigName("conf")
-		viper.AddConfigPath("./")
-		if err := viper.ReadInConfig(); err != nil {
-			logrus.Errorf("load config error: %v", err)
-		}
-		host = viper.GetString("mysql.host")
-		user = viper.GetString("mysql.user")
-		password = viper.GetString("mysql.password")
-		dbname = viper.GetString("mysql.dbname")
-		url = fmt.Sprintf("%s:%s@(%s)/%s?charset=utf8&parseTime=True&loc=Local", user, password, host, dbname)
-		db, err = gorm.Open("mysql", url)
-		if err != nil {
-			panic("failed to connect database")
-		}
-		// 开启日志
-		db.LogMode(true)
-		// 全局禁用表名复数,如果设置为 true, `User` 的默认表名为 `user`,否则表名就是 `users`
-		db.SingularTable(true)
-	})
+    once.Do(func() {
+        var (
+            host, user, password, dbname, url string
+            err error
+        )
+        viper.SetConfigName("conf")
+        viper.AddConfigPath("./")
+        if err := viper.ReadInConfig(); err != nil {
+            logrus.Errorf("load config error: %v", err)
+        }
+        host = viper.GetString("mysql.host")
+        user = viper.GetString("mysql.user")
+        password = viper.GetString("mysql.password")
+        dbname = viper.GetString("mysql.dbname")
+        url = fmt.Sprintf("%s:%s@(%s)/%s?charset=utf8&parseTime=True&loc=Local", user, password, host, dbname)
+        db, err = gorm.Open("mysql", url)
+        if err != nil {
+            panic("failed to connect database")
+        }
+        // 开启日志
+        db.LogMode(true)
+        // 全局禁用表名复数,如果设置为 true, `User` 的默认表名为 `user`,否则表名就是 `users`
+        db.SingularTable(true)
+    })
 }
 ```
 
@@ -164,18 +164,18 @@ func init() {
 
 ```go
 type Hero struct {
-	ID          uint64
-	Name        string
-	RoleMain    string
+    ID          uint64
+    Name        string
+    RoleMain    string
   // 这里的标签用于指定该字段对应表中哪个字段
   // 默认情况示例：RoleMain 对应表中的 role_main
-	Birthday    time.Time `gorm:"column:birthdate"`
-	HpMax       float32
-	MpMax       float32
-	AttackMax   float32
-	DefenseMax  float32
-	AttackSpeed float32 `gorm:"column:attack_speed_max"`
-	AttackRange string
+    Birthday    time.Time `gorm:"column:birthdate"`
+    HpMax       float32
+    MpMax       float32
+    AttackMax   float32
+    DefenseMax  float32
+    AttackSpeed float32 `gorm:"column:attack_speed_max"`
+    AttackRange string
 }
 ```
 
@@ -183,9 +183,9 @@ type Hero struct {
 
 ```go
 type heroArgs struct {
-	ID       uint64
-	Name     string
-	RoleMain string
+    ID       uint64
+    Name     string
+    RoleMain string
 }
 ```
 
@@ -200,17 +200,17 @@ type heroArgs struct {
 
 ```go
 func (h *heroArgs) QueryFirst() (*Hero, error) {
-	hero := new(Hero)
-	// SELECT * FROM `heros` WHERE (id >= 1009) ORDER BY `heros`.`id` ASC LIMIT 1
-	err := db.Table("heros").Where("id >= ?", h.ID).First(hero).Error
-	return hero, err
+    hero := new(Hero)
+    // SELECT * FROM `heros` WHERE (id >= 1009) ORDER BY `heros`.`id` ASC LIMIT 1
+    err := db.Table("heros").Where("id >= ?", h.ID).First(hero).Error
+    return hero, err
 }
 
 func (h *heroArgs) QueryLast() (*Hero, error) {
-	hero := new(Hero)
-	// SELECT * FROM `heros`  WHERE (role_main = '法师') ORDER BY `heros`.`id` DESC LIMIT 1
-	err := db.Table("heros").Where("role_main = ?", h.RoleMain).Last(hero).Error
-	return hero,err
+    hero := new(Hero)
+    // SELECT * FROM `heros`  WHERE (role_main = '法师') ORDER BY `heros`.`id` DESC LIMIT 1
+    err := db.Table("heros").Where("role_main = ?", h.RoleMain).Last(hero).Error
+    return hero,err
 }
 ```
 
@@ -218,11 +218,11 @@ func (h *heroArgs) QueryLast() (*Hero, error) {
 
 ```go
 func (h *heroArgs) QueryFind() ([]*Hero, error) {
-	heroes := make([]*Hero, 0)
-	// SELECT * FROM `heros`  WHERE (role_main = '战士' AND id > 10029)
-	err := db.Table("heros").Where("role_main = ? AND id > ?", 
+    heroes := make([]*Hero, 0)
+    // SELECT * FROM `heros`  WHERE (role_main = '战士' AND id > 10029)
+    err := db.Table("heros").Where("role_main = ? AND id > ?", 
                                  h.RoleMain, h.ID).Find(&heroes).Error
-	return heroes, err
+    return heroes, err
 }
 ```
 
@@ -261,30 +261,30 @@ db.Order("age desc").Find(&users1).Order("age", true).Find(&users2)
 
 ```go
 func (h *heroArgs) QueryGroupByRole() ([]int, []string) {
-	count, role := make([]int, 0), make([]string, 0)
-	// SELECT COUNT(1) num, role_main FROM heros GROUPBY role_main HAVING (num > 10)
-	rows, _ := db.Table("heros").Select("COUNT(1) num, role_main").Group("role_main").Having("num > ?", 10).Rows()
-	for rows.Next() {
-		c, r := 0, ""
-		rows.Scan(&c, &r)
-		count = append(count, c)
-		role = append(role, r)
-	}
-	return count, role
+    count, role := make([]int, 0), make([]string, 0)
+    // SELECT COUNT(1) num, role_main FROM heros GROUPBY role_main HAVING (num > 10)
+    rows, _ := db.Table("heros").Select("COUNT(1) num, role_main").Group("role_main").Having("num > ?", 10).Rows()
+    for rows.Next() {
+        c, r := 0, ""
+        rows.Scan(&c, &r)
+        count = append(count, c)
+        role = append(role, r)
+    }
+    return count, role
 }
 
 type Result struct {
-	Num  int
-	Role string
+    Num  int
+    Role string
 }
 
 func (h *heroArgs) QueryGroup() ([]Result, error) {
-	results := make([]Result, 0)
-	// SELECT count(1) num, role_main role FROM `heros`   GROUP BY role
+    results := make([]Result, 0)
+    // SELECT count(1) num, role_main role FROM `heros`   GROUP BY role
   // 以下两种写法都可以
-	// err := db.Table("heros").Select("count(1) num, role_main role").Group("role").Scan(&results).Error
-	err := db.Table("heros").Select("count(1) num, role_main role").Group("role").Find(&results).Error
-	return results, err
+    // err := db.Table("heros").Select("count(1) num, role_main role").Group("role").Scan(&results).Error
+    err := db.Table("heros").Select("count(1) num, role_main role").Group("role").Find(&results).Error
+    return results, err
 }
 ```
 
@@ -306,11 +306,11 @@ db.Offset(3).Find(&users)
 
 ```go
 func (h *heroArgs) QuerySub() ([]*Hero, error) {
-	heroes := make([]*Hero, 0)
+    heroes := make([]*Hero, 0)
   // SELECT * FROM `heros`  WHERE (id > (SELECT AVG(id) FROM `heros`)) 
-	err := db.Table("heros").Where("id > ?",db.Table("heros").Select("AVG(id)").SubQuery()).
-  	Find(&heroes).Error
-	return heroes, err
+    err := db.Table("heros").Where("id > ?",db.Table("heros").Select("AVG(id)").SubQuery()).
+      Find(&heroes).Error
+    return heroes, err
 }
 ```
 
@@ -318,12 +318,12 @@ func (h *heroArgs) QuerySub() ([]*Hero, error) {
 
 ```go
 func (h *heroArgs) QueryManyAndCount() ([]*Hero, int, error) {
-	heroes := make([]*Hero, 0)
-	count := 0
+    heroes := make([]*Hero, 0)
+    count := 0
   // SELECT * FROM `heros`  WHERE (id > 10029)
   // SELECT count(*) FROM `heros`  WHERE (id > 10029)
-	err := db.Table("heros").Where("id > ?", h.ID).Find(&heroes).Count(&count).Error
-	return heroes, count, err
+    err := db.Table("heros").Where("id > ?", h.ID).Find(&heroes).Count(&count).Error
+    return heroes, count, err
 }
 ```
 
@@ -355,8 +355,8 @@ go get github.com/go-playground/validator/v10
 
 ```go
 type User struct {
-	Name string `validate:"min=6,max=10"`
-	Age  int    `validate:"min=1,max=100"`
+    Name string `validate:"min=6,max=10"`
+    Age  int    `validate:"min=1,max=100"`
 }
 ```
 
@@ -368,24 +368,24 @@ type User struct {
 
 ```go
 type User struct {
-	Name string `validate:"ne=admin"` // ne 不等于
-	Age  int    `validate:"gte=18"`   // gte  大于等于
-	// oneof 只能是列举出的值其中一个，这些值必须是数值或字符串，以空格分隔，如果字符串中有空格，将字符串用单引号包围
-	Sex string `validate:"oneof=male female"`
-	// 注意如果字段类型是time.Time，使用 gt/gte/lt/lte 等约束时不用指定参数值，默认与当前的 UTC 时间比较
-	RegTime time.Time `validate:"lte"` // lte 小于等于
+    Name string `validate:"ne=admin"` // ne 不等于
+    Age  int    `validate:"gte=18"`   // gte  大于等于
+    // oneof 只能是列举出的值其中一个，这些值必须是数值或字符串，以空格分隔，如果字符串中有空格，将字符串用单引号包围
+    Sex string `validate:"oneof=male female"`
+    // 注意如果字段类型是time.Time，使用 gt/gte/lt/lte 等约束时不用指定参数值，默认与当前的 UTC 时间比较
+    RegTime time.Time `validate:"lte"` // lte 小于等于
 }
 
 func TestValidator(t *testing.T) {
-	// 创建验证器，这个验证器可以指定选项、添加自定义约束
-	validate := validator.New()
-	// 使用 Struct() 验证各种结构对象的字段是否符合定义的约束
-	u := User{Name: "admin", Age: 15, Sex: "none", RegTime: time.Now().UTC().Add(1 * time.Hour)}
-	err = validate.Struct(u)
-	if err != nil {
-		// 四个字段的值都验证失败了
-		fmt.Println("User validate error: \n",err)
-	}
+    // 创建验证器，这个验证器可以指定选项、添加自定义约束
+    validate := validator.New()
+    // 使用 Struct() 验证各种结构对象的字段是否符合定义的约束
+    u := User{Name: "admin", Age: 15, Sex: "none", RegTime: time.Now().UTC().Add(1 * time.Hour)}
+    err = validate.Struct(u)
+    if err != nil {
+        // 四个字段的值都验证失败了
+        fmt.Println("User validate error: \n",err)
+    }
 }
 ```
 
@@ -404,28 +404,27 @@ eqcsfield=InnerStructField.Field
 ```
 
 ```go
-
 type RegisterForm struct {
-	Name     string `validate:"min=2"`
-	Age      int    `validate:"min=18"`
-	Password string `validate:"min=10"`
-	// 该字段的值要和 Password 字段的值相等
-	Pwd      string `validate:"eqfield=Password"`
+    Name     string `validate:"min=2"`
+    Age      int    `validate:"min=18"`
+    Password string `validate:"min=10"`
+    // 该字段的值要和 Password 字段的值相等
+    Pwd      string `validate:"eqfield=Password"`
 }
 
 func TestCrossFieldConstraint(t *testing.T) {
-	validate := validator.New()
-	f := RegisterForm{
-		Name:     "dj",
-		Age:      18,
-		Password: "1234567890",
-		Pwd:      "123",
-	}
-	err = validate.Struct(f)
-	if err != nil {
-		// Key: 'RegisterForm.Pwd' Error:Field validation for 'Pwd' failed on the 'eqfield' tag
-		fmt.Println("f validate error: \n", err)
-	}
+    validate := validator.New()
+    f := RegisterForm{
+        Name:     "dj",
+        Age:      18,
+        Password: "1234567890",
+        Pwd:      "123",
+    }
+    err = validate.Struct(f)
+    if err != nil {
+        // Key: 'RegisterForm.Pwd' Error:Field validation for 'Pwd' failed on the 'eqfield' tag
+        fmt.Println("f validate error: \n", err)
+    }
 }
 ```
 
@@ -490,11 +489,11 @@ omitempty：如果字段未设置，则忽略它。
 
 ```go
 func TestVarWithValue(t *testing.T) {
-	str1 := "my name is fms5cms"
-	str2 := "ms5cms"
-	validate := validator.New()
-	t.Log(validate.VarWithValue(str1,str2,"eqfield"))
-	t.Log(validate.VarWithValue(str1,str2,"nefield"))
+    str1 := "my name is fms5cms"
+    str2 := "ms5cms"
+    validate := validator.New()
+    t.Log(validate.VarWithValue(str1,str2,"eqfield"))
+    t.Log(validate.VarWithValue(str1,str2,"nefield"))
 }
 ```
 
@@ -502,22 +501,22 @@ func TestVarWithValue(t *testing.T) {
 
 ```go
 ormation struct {
-	Info string `validate:"startwithfS"`
+    Info string `validate:"startwithfS"`
 }
 
 func CheckStartWithfS(fl validator.FieldLevel) bool {
-	value := fl.Field().String()
-	return strings.HasPrefix(value,"fS")
+    value := fl.Field().String()
+    return strings.HasPrefix(value,"fS")
 }
 
 func TestCustomize(t *testing.T) {
-	validate := validator.New()
-	// 注册校验规则
-	validate.RegisterValidation("startwithfS",CheckStartWithfS)
-	question := Information{"fS?"}
-	answer := Information{"my favorite group"}
-	t.Log(validate.Struct(question))
-	t.Log(validate.Struct(answer))
+    validate := validator.New()
+    // 注册校验规则
+    validate.RegisterValidation("startwithfS",CheckStartWithfS)
+    question := Information{"fS?"}
+    answer := Information{"my favorite group"}
+    t.Log(validate.Struct(question))
+    t.Log(validate.Struct(answer))
 }
 ```
 
@@ -535,6 +534,16 @@ validator 返回的错误实际上只有两种：
 3. `ValidationErrors` 字段违反约束
 
 可以在程序判断 `err != nil` 后，依次将 err 转换为 `InvalidValidationError` 和 `ValidationErrors` 以获取更详细的信息。
+
+# singleflight
+
+[第三方库地址](golang.org/x/sync/singleflight)
+
+[源码阅读](https://lailin.xyz/post/go-training-week5-singleflight.html)
+
+常用于解决缓存击穿（平常在高并发系统中，会出现大量的请求同时查询一个 key 的情况，假如此时这个热点 key 刚好失效了，就会导致大量的请求都打到数据库上面去）。
+
+singleflight 的设计思路就是将一组相同的请求合并成一个请求，使用 map 存储，只会有一个请求到达 mysql，使用`sync.waitgroup`包进行同步，对所有的请求返回相同的结果。
 
 # 会话追踪
 
@@ -614,9 +623,9 @@ var jwtSecret = []byte("fms5cmS")
 
 // Claims 用于存储数据
 type Claims struct {
-	Username string `json:"username"`
-	Password string `jon:"password"`
-	jwt.StandardClaims
+    Username string `json:"username"`
+    Password string `jon:"password"`
+    jwt.StandardClaims
 }
 // Header 部分：alg=HS256、typ=JWT
 // Payload(也叫 Claims)部分：
@@ -626,34 +635,34 @@ type Claims struct {
 // Signature 部分，防止数据被篡改
 //   注意，该库的 SignedString 方法接收一个 interface{} 类型，但必须是 []byte，否则运行时报错
 func GenerateToken(username, password string) (string, error) {
-	nowTime := time.Now()
-	expireTime := nowTime.Add(3 * time.Hour)
-	claims := Claims{
-		Username: username,
-		Password: password,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expireTime.Unix(),
-			Issuer:    "fms5cmS",
-		},
-	}
-	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return tokenClaims.SignedString(jwtSecret)
+    nowTime := time.Now()
+    expireTime := nowTime.Add(3 * time.Hour)
+    claims := Claims{
+        Username: username,
+        Password: password,
+        StandardClaims: jwt.StandardClaims{
+            ExpiresAt: expireTime.Unix(),
+            Issuer:    "fms5cmS",
+        },
+    }
+    tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    return tokenClaims.SignedString(jwtSecret)
 }
 
 func ParseToken(token string) (*Claims, error) {
-	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		// 对 alg 即签名算法校验
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-		return jwtSecret, nil
-	})
-	if tokenClaims != nil {
-		if claims, ok := tokenClaims.Claims.(*Claims); ok && tokenClaims.Valid { // 校验有效性
-			return claims, nil
-		}
-	}
-	return nil, err
+    tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+        // 对 alg 即签名算法校验
+        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+            return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+        }
+        return jwtSecret, nil
+    })
+    if tokenClaims != nil {
+        if claims, ok := tokenClaims.Claims.(*Claims); ok && tokenClaims.Valid { // 校验有效性
+            return claims, nil
+        }
+    }
+    return nil, err
 }
 ```
 
@@ -661,31 +670,29 @@ func ParseToken(token string) (*Claims, error) {
 
 [swag](https://github.com/swaggo/swag) 可以自动生成 Restful 风格的 API 文档。支持 Gin、echo、buffalo 框架以及 Go 自带的 net/http 包。
 
-
-
 # 定时任务
 
 [robfig/cron](https://github.com/robfig/cron) 实现了 cron 规范解析器和任务运行器，简单来讲就是包含了定时任务所需的功能。
 
 Cron 表达式：`秒 分 时 日 月 周`
 
-| 字段名       | 允许的值        | 允许的特殊字符      |
-| ------------ | --------------- | ------------------- |
-| Seconds      | 0-59            | `,` `-` `*` `/`     |
-| Minutes      | 0-59            | `,` `-` `*` `/`     |
-| Hours        | 0-23            | `,` `-` `*` `/`     |
-| Day-of-Month | 1-31            | `,` `-` `*` `?` `/` |
+| 字段名          | 允许的值           | 允许的特殊字符             |
+| ------------ | -------------- | ------------------- |
+| Seconds      | 0-59           | `,` `-` `*` `/`     |
+| Minutes      | 0-59           | `,` `-` `*` `/`     |
+| Hours        | 0-23           | `,` `-` `*` `/`     |
+| Day-of-Month | 1-31           | `,` `-` `*` `?` `/` |
 | Month        | 1-12 或 JAN-DEC | `,` `-` `*` `/`     |
 | Day-of-Week  | 1-7 或 SUN-SAT  | `,` `-` `*` `?` `/` |
 
 这里的 Cron 比 Linux 中的 Crontab 多了秒，特殊字符：
 
-| 符号  | 含义                                       |
-| ----- | ------------------------------------------ |
-| `*`   | 匹配所有值                                 |
-| `，`  | 指定可选值                                 |
-| `-`   | 指定一个范围                               |
-| `*/n` | 指定增量                                   |
+| 符号    | 含义                          |
+| ----- | --------------------------- |
+| `*`   | 匹配所有值                       |
+| `，`   | 指定可选值                       |
+| `-`   | 指定一个范围                      |
+| `*/n` | 指定增量                        |
 | `?`   | 不指定值，用于替代 `*`，类似于 Go 中的 `_` |
 
 # 邮箱
@@ -698,8 +705,6 @@ gomail 是一个用于发送电子邮件得第三方开源库，目前只支持 
 
 SMTP Server 的 HOST 端口号为 465，还有一种常用的 HOST 端口号为 25，不建议使用。25 端口在云服务厂商上是一个经常被默认封禁的端口，且不可解封，如果使用 25 端口，可能部署到云服务环境后邮件无法正常发送。
 
-
-
 # 令牌桶
 
 ```go
@@ -707,8 +712,6 @@ go get -u github.com/juju/ratelimit@sv1.0.1
 ```
 
 ratelimit 提供了一个简单高效的令牌桶实现，可以用于实现限流器的逻辑
-
-
 
 # 分布式链路追踪
 
@@ -718,15 +721,15 @@ Jaeger 是 uber 开源的分布式链路追踪系统，它提供了分布式上�
 
 ```shell
 docker run -d --name jaeger \
-	-e COLLECTOR_ZIPKIN_HTTP_PORT=9411 \
-	-p 5775:5775/udp \
-	-p 6831:6831/udp \
-	-p 6832:6832/udp \
-	-p 5778:5778 \
-	-p 16686:16686 \
-	-p 14268:14268 \
-	-p 9411:9411 \
-	jaegertracing/all-in-one:1.16
+    -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 \
+    -p 5775:5775/udp \
+    -p 6831:6831/udp \
+    -p 6832:6832/udp \
+    -p 5778:5778 \
+    -p 16686:16686 \
+    -p 14268:14268 \
+    -p 9411:9411 \
+    jaegertracing/all-in-one:1.16
 ```
 
 启动后，打开浏览器访问 `http://localhost:16686` 即可看到 Jaeger 的 Web UI 界面。
@@ -735,8 +738,6 @@ docker run -d --name jaeger \
 go get -u github.com/opentracing/opentracing-go
 go get -u github.com/uber/jaeger-client-go/
 ```
-
-
 
 # 热更新
 
@@ -748,4 +749,3 @@ go get -u github.com/uber/jaeger-client-go/
 go get -u golang.org/x/sys/...
 go get -u github.com/fsnotify/fsnotify
 ```
-

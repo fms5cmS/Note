@@ -65,6 +65,7 @@ func main() {
 消费端：
 
 - runtime.shcedule：
+  
   - 每从本地队列获取 60 次 G 会加锁通过 runtime.globalrunqget 从全局队列中获取头部的第一个 G；
     - 这个次数是通过 P 的 schedtick 来判断的，schedtick%61 == 0
     - 这里仅会获取全局队列头部的第一个 G，不会多获取
@@ -82,7 +83,9 @@ func main() {
     - 会垂死挣扎一下，从全局、本地、网络再检查一遍是否能获取到 g 不能的话进入休眠状态
 
 - runtime.execute：执行 runtime.schedule 获取到的 G
+
 - runtime.gogo：会把拿到的 G 的现场恢复出来，从 pc 寄存器开始继续执行
+
 - runtime.goexit：缓存相关的 G 结构体资源，回到 runtime.schedule 继续执行
 
 注意：每次操作全局队列都是加锁进行的，本地队列则是无锁队列，只需要使用 atomic 操作就可以保证并发安全，而不需要加锁。
@@ -122,7 +125,7 @@ var (
 // no case ready, block
 select {
     case <- ch1:
-    	println("ch1 ready")
+        println("ch1 ready")
     case <- ch2:
     println("ch2 ready")
 }
@@ -175,39 +178,37 @@ sysmon(system monitor) 是一个高优先级的后台线程，其 goroutine 在�
 ```go
 // 输出顺序为 9 0 1 2 3 4 5 6 7 8
 func main() {
-	// 限制全局只有一个 P，这样当前线程创建的全部 G 都会进入同一个本地队列
-	runtime.GOMAXPROCS(1)
-	// i = 9 是最后创建的 G，在老版本（1.13及之前）里面一定会放到 runnext 中
-	// 执行时，会先拿出 runnext 里面的 G，所以先输出的是 9
-	// 然后 0~8 的 G 都是放在 local run queue 中，所以会顺序输出 0~8
-	for i := 0; i < 10; i++ {
-		i := i
-		go func() {
-			fmt.Println(i)
-		}()
-	}
-	var ch = make(chan int)
-	<-ch
+    // 限制全局只有一个 P，这样当前线程创建的全部 G 都会进入同一个本地队列
+    runtime.GOMAXPROCS(1)
+    // i = 9 是最后创建的 G，在老版本（1.13及之前）里面一定会放到 runnext 中
+    // 执行时，会先拿出 runnext 里面的 G，所以先输出的是 9
+    // 然后 0~8 的 G 都是放在 local run queue 中，所以会顺序输出 0~8
+    for i := 0; i < 10; i++ {
+        i := i
+        go func() {
+            fmt.Println(i)
+        }()
+    }
+    var ch = make(chan int)
+    <-ch
 }
 ```
 
 ```go
 // 输出顺序为 0 1 2 3 4 5 6 7 8 9
 func main() {
-	runtime.GOMAXPROCS(1)
-	for i := 0; i < 10; i++ {
-		i := i
-		go func() {
-			fmt.Println(i)
-		}()
-	}
-	// 老版本（1.13及之前）time.Sleep 也会创建一个 G，该 G 最后创建会被放到 runnext
-	// 从而将 9 的 G 也放到了 local run queue 中，导致 0~9 的 G 都在 local run queue，所以会顺序输出 0~9
-	time.Sleep(time.Hour)
+    runtime.GOMAXPROCS(1)
+    for i := 0; i < 10; i++ {
+        i := i
+        go func() {
+            fmt.Println(i)
+        }()
+    }
+    // 老版本（1.13及之前）time.Sleep 也会创建一个 G，该 G 最后创建会被放到 runnext
+    // 从而将 9 的 G 也放到了 local run queue 中，导致 0~9 的 G 都在 local run queue，所以会顺序输出 0~9
+    time.Sleep(time.Hour)
 }
 ```
-
-
 
 # 数据结构
 
@@ -219,17 +220,17 @@ func main() {
 
 ```go
 type hchan struct {
-	qcount   uint  // 底层 buffer 中当前一共有多少个数据
-	dataqsiz uint  // size of the circular queue. 这里的值为 bufffer 的长度，即 3
-	buf      unsafe.Pointer // 该指针指向了一个**循环数组**，数组长度为 chan buffer 的长度，即 3
-	elemsize uint16
-	closed   uint32
-	elemtype *_type // element type
-	sendx    uint   // send index
-	recvx    uint   // receive index
-	recvq    waitq  // list of recv waiters，接收者的 goroutine 队列，链表的结构
-	sendq    waitq  // list of send waiters，发送者的 goroutine 队列，链表的结构
-	lock mutex
+    qcount   uint  // 底层 buffer 中当前一共有多少个数据
+    dataqsiz uint  // size of the circular queue. 这里的值为 bufffer 的长度，即 3
+    buf      unsafe.Pointer // 该指针指向了一个**循环数组**，数组长度为 chan buffer 的长度，即 3
+    elemsize uint16
+    closed   uint32
+    elemtype *_type // element type
+    sendx    uint   // send index，记录下一个可存放数据的索引
+    recvx    uint   // receive index，记录读取 chan 的元素的数组索引
+    recvq    waitq  // list of recv waiters，接收者的 goroutine 队列，链表的结构
+    sendq    waitq  // list of send waiters，发送者的 goroutine 队列，链表的结构
+    lock mutex
 }
 ```
 
@@ -261,8 +262,6 @@ Go 语言中 timer 是使用**小顶四叉堆**实现的。
 
 [时间轮在 Kafka 的实践](https://www.infoq.cn/article/erdajpj5epir65iczxzi)
 
-
-
 ## map
 
 在哈希表中查找某个键对应的元素时，先用哈希函数将键值转为哈希值（一个无符号整数），根据哈希值（的低几位）定位到一个哈希桶，再在哈希桶中找这个键值，由于键-元素时一起存储的，找到了键也就找到了元素。**会有两次比较的过程：比较哈希值从而找到哈希桶，比较键值从而找到键-元素对**。
@@ -274,37 +273,37 @@ Go 语言中 timer 是使用**小顶四叉堆**实现的。
 // map 的底层结构
 type hmap struct {
     count     int // 元素的个数，len(map) 的返回值
-	flags     uint8
+    flags     uint8
     B         uint8  // 桶(buckets)数组的长度为 2^B 个，map 共计存放 loadFactor * 2^B 个元素
-	noverflow uint16 // approximate number of overflow buckets; see incrnoverflow for details
-	hash0     uint32 // hash seed
+    noverflow uint16 // approximate number of overflow buckets; see incrnoverflow for details
+    hash0     uint32 // hash seed
 
-	buckets    unsafe.Pointer // 指向一个 2^B 大小的桶数组. may be nil if count==0.
-	oldbuckets unsafe.Pointer // previous bucket array of half the size, non-nil only when growing
-	nevacuate  uintptr        // 标识扩容进度，小于该地址的 buckets 已经完成迁移
+    buckets    unsafe.Pointer // 指向一个 2^B 大小的桶数组. may be nil if count==0.
+    oldbuckets unsafe.Pointer // previous bucket array of half the size, non-nil only when growing
+    nevacuate  uintptr        // 标识扩容进度，小于该地址的 buckets 已经完成迁移
 
-	extra *mapextra // optional fields
+    extra *mapextra // optional fields
 }
 
 // buckets 字段是地址，最终会指向这个结构体
 type bmap struct {
-	tophash [bucketCnt]uint8 // tophash 是 hash 值的高 8 位
+    tophash [bucketCnt]uint8 // tophash 是 hash 值的高 8 位
 }
 
 // mapextra holds fields that are not present on all maps.
 type mapextra struct {
-	// If both key and elem do not contain pointers and are inline, then we mark bucket
-	// type as containing no pointers. This avoids scanning such maps.
-	// However, bmap.overflow is a pointer. In order to keep overflow buckets
-	// alive, we store pointers to all overflow buckets in hmap.extra.overflow and hmap.extra.oldoverflow.
-	// overflow and oldoverflow are only used if key and elem do not contain pointers.
-	// overflow contains overflow buckets for hmap.buckets.
-	// oldoverflow contains overflow buckets for hmap.oldbuckets.
-	// The indirection allows to store a pointer to the slice in hiter.
-	overflow    *[]*bmap
-	oldoverflow *[]*bmap
+    // If both key and elem do not contain pointers and are inline, then we mark bucket
+    // type as containing no pointers. This avoids scanning such maps.
+    // However, bmap.overflow is a pointer. In order to keep overflow buckets
+    // alive, we store pointers to all overflow buckets in hmap.extra.overflow and hmap.extra.oldoverflow.
+    // overflow and oldoverflow are only used if key and elem do not contain pointers.
+    // overflow contains overflow buckets for hmap.buckets.
+    // oldoverflow contains overflow buckets for hmap.oldbuckets.
+    // The indirection allows to store a pointer to the slice in hiter.
+    overflow    *[]*bmap
+    oldoverflow *[]*bmap
 
-	nextOverflow *bmap // 指向空闲的 overflow bucket 的指针
+    nextOverflow *bmap // 指向空闲的 overflow bucket 的指针
 }
 ```
 

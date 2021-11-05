@@ -4,35 +4,35 @@
 
 ```go
 func Split(s, sep string) []string {
-	var result []string
-	i := strings.Index(s, sep)
-	for i > -1 {
-		result = append(result, s[:i])
-		s = s[i+len(sep):]
-		i = strings.Index(s, sep)
-	}
-	return append(result, s)
+    var result []string
+    i := strings.Index(s, sep)
+    for i > -1 {
+        result = append(result, s[:i])
+        s = s[i+len(sep):]
+        i = strings.Index(s, sep)
+    }
+    return append(result, s)
 }
 
 func TestSplit(t *testing.T) {
-	tests := map[string]struct {
-		input string
-		sep   string
-		want  []string
-	}{
-		"simple":    {input: "a/b/c", sep: "/", want: []string{"a", "b", "c"}},
-		"wrong sep": {input: "a/b/c", sep: ".", want: []string{"a/b/c"}},
-		"no sep":    {input: "abc", sep: "/", want: []string{"abc"}},
-		"trailing sep":{input: "a/b/c/", sep: "/", want: []string{"a", "b", "c"}},
-	}
-	for name,tc := range tests{
-		t.Log(name)
-		got := Split(tc.input, tc.sep)
-		if !reflect.DeepEqual(tc.want, got) {
-			// 这里是 Errorf() 而不是 Fatalf()，后者在遇到一个失败的测试数据时，就会终止测试，之后的数据就无法测试了
-			t.Errorf("%s: expected: %v, got: %v", name, tc.want, got)
-		}
-	}
+    tests := map[string]struct {
+        input string
+        sep   string
+        want  []string
+    }{
+        "simple":    {input: "a/b/c", sep: "/", want: []string{"a", "b", "c"}},
+        "wrong sep": {input: "a/b/c", sep: ".", want: []string{"a/b/c"}},
+        "no sep":    {input: "abc", sep: "/", want: []string{"abc"}},
+        "trailing sep":{input: "a/b/c/", sep: "/", want: []string{"a", "b", "c"}},
+    }
+    for name,tc := range tests{
+        t.Log(name)
+        got := Split(tc.input, tc.sep)
+        if !reflect.DeepEqual(tc.want, got) {
+            // 这里是 Errorf() 而不是 Fatalf()，后者在遇到一个失败的测试数据时，就会终止测试，之后的数据就无法测试了
+            t.Errorf("%s: expected: %v, got: %v", name, tc.want, got)
+        }
+    }
 }
 ```
 
@@ -84,11 +84,11 @@ import "fmt"
 // 变量 a 在闭包之后进行了其他赋值操作
 // 可以看出，这个闭包程序中，是通过地址引用的方式对变量 a 进行操作的；而对变量 b 的引用则是通过直接值传递的方式进行
 func main() {
-	a, b := 1, 2
-	go func() {
-		fmt.Println(a, b)
-	}()
-	a = 99
+    a, b := 1, 2
+    go func() {
+        fmt.Println(a, b)
+    }()
+    a = 99
 }
 ```
 
@@ -96,15 +96,15 @@ func main() {
 package main
 
 func small() string {
-	s := "hello, " + "world"
-	return s
+    s := "hello, " + "world"
+    return s
 }
 
 func fib(index int) int {
-	if index < 2 {
-		return index
-	}
-	return fib(index-1) + fib(index-2)
+    if index < 2 {
+        return index
+    }
+    return fib(index-1) + fib(index-2)
 }
 
 // go tool compile -m=2 main.go
@@ -113,13 +113,10 @@ func fib(index int) int {
 // 可以看出，small 函数可以被内联而 fib 函数由于是递归函数所以不能被内联
 // 可以在 small 函数前增加 //go:noinline 再看一下调试信息
 func main() {
-	small()
-	fib(65)
+    small()
+    fib(65)
 }
 ```
-
-
-
 
 - `-S file.go` 查看代码编译后的汇编代码
   - 注意，此时输出的汇编代码还没有链接，呈现的地址都是偏移量
@@ -128,9 +125,9 @@ func main() {
 ```shell
 > go tool compile -S main.go | grep concat
 # 这里仅列出了汇编中调用字符串连接函数的内容
-0x0068 00104 (main.go:5)	CALL	runtime.concatstring2(SB)
-0x00eb 00235 (main.go:6)	CALL	runtime.concatstring5(SB)
-0x0197 00407 (main.go:7)	CALL	runtime.concatstrings(SB)
+0x0068 00104 (main.go:5)    CALL    runtime.concatstring2(SB)
+0x00eb 00235 (main.go:6)    CALL    runtime.concatstring5(SB)
+0x0197 00407 (main.go:7)    CALL    runtime.concatstrings(SB)
 rel 105+4 t=8 runtime.concatstring2+0
 rel 236+4 t=8 runtime.concatstring5+0
 rel 408+4 t=8 runtime.concatstrings+0
@@ -149,6 +146,7 @@ golang 对于 profiling 支持的比较好，标准库就提供了 profile 库 "
 可视化工具 Graphviz，在[官网](https://graphviz.gitlab.io/_pages/Download/Download_windows.html)下载，安装或解压后配置到环境变量 Path 中
 
 - `go tool pprof xxxx`进入命令行交互模式：
+  
   - `help` 查看可以进行的操作
   - `topN` 查看前 N 的信息
   - `web` 在网页查看
@@ -156,6 +154,7 @@ golang 对于 profiling 支持的比较好，标准库就提供了 profile 库 "
   - `quit`退出
 
 - runtime/pprof 通常用于工具分析
+
 - net/http/pprof 通常用于常驻服务进程分析
 
 ## 基本使用
@@ -166,15 +165,15 @@ golang 对于 profiling 支持的比较好，标准库就提供了 profile 库 "
 
 ```go
 import (
-	"log"
-	"net/http"
-	_ "net/http/pprof"
+    "log"
+    "net/http"
+    _ "net/http/pprof"
 )
 
 func main() {
-	go func() {
-		log.Println(http.ListenAndServe(":6060", nil))
-	}()
+    go func() {
+        log.Println(http.ListenAndServe(":6060", nil))
+    }()
   // 业务代码...
 }
 ```
@@ -188,6 +187,7 @@ go tool pprof -http=:1234 http://your-prd-addr:6060/debug/pprof/profile?seconds=
 ```
 
 - VIEW-Top，会有以下几项：
+  
   - Flat：函数自身运行耗时
   - Flat%：函数自身耗时比例
   - Sum%：累计耗时比例
@@ -196,8 +196,11 @@ go tool pprof -http=:1234 http://your-prd-addr:6060/debug/pprof/profile?seconds=
   - Name：函数名
 
 - VIEW-Graph 视图呈现函数调用树
+  
   - 可以方便地跟踪定位业务消耗源头，方框越大代表函数自身消耗越大。
+
 - VIEW-Flame Graph 火焰图;
+  
   - X 轴显示的是该性能指标分析中所占用的资源量，越宽占用资源越多
   - Y 轴表示调用栈，每一层都是一个函数，调用栈越深火焰越深，底部就是正在执行的函数，上方的都是其父函数
   - 最底部的边表示被占用的 CPU 时间，越宽占比越大。通常从最底部最宽边向上观察父函数，直到业务代码函数
@@ -208,12 +211,14 @@ go tool pprof -http=:1234 http://127.0.0.1:6060/debug/pprof/heap
 ```
 
 - SAMPLE
+  
   - alloc_objects：收集自程序启动以来累计的分配对象数
   - alloc_space：收集自程序启动以来累计的分配空间
   - inuse_objects：收集统计实时，正在使用的分配对象数
   - inuse_space：收集统计实时，正在使用的分配空间
 
 - 如果要**减少内存消耗**，需要查看 inuse_space 在正常程序运行期间收集的配置文件；
+
 - 如果要提高执行速度，查看 alloc_objects 大量运行时间后胡哦程序结束时收集的概要文件
 
 ---
@@ -252,20 +257,20 @@ go tool pprof http://127.0.0.1:6060/debug/pprof/profile?seconds=30
 var ints []int
 func BenchmarkSort10k(b *testing.B) {
   slice := ints[0:10000]
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		sort.Ints(slice)
-	}
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        sort.Ints(slice)
+    }
 }
 // 函数签名是固定的，用于完成数据初始化的工作
 func TestMain(m *testing.M) {
-	rand.Seed(time.Now().Unix())
-	ints = make([]int, 10000)
+    rand.Seed(time.Now().Unix())
+    ints = make([]int, 10000)
 
-	for i := 0; i < 10000; i++ {
-		ints[i] = rand.Int()
-	}
-	m.Run()
+    for i := 0; i < 10000; i++ {
+        ints[i] = rand.Int()
+    }
+    m.Run()
 }
 ```
 
@@ -275,8 +280,6 @@ func TestMain(m *testing.M) {
 - `go tool pprof -http=:6060 file.out` 自动在浏览器中打开一个页面
   - 左上角 View -> Flame graph 可以通过火焰图显示
 
-
-
 # trace
 
 用于分析程序动态执行的情况，且分析精度达到纳秒级别。
@@ -285,18 +288,3 @@ func TestMain(m *testing.M) {
 curl -o trace.out http://127.0.0.1:8081/debug/pprof/trace?seconds=2
 go tool trace trace.out
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

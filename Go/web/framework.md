@@ -26,12 +26,11 @@ panic: wildcard route ':id' conflicts with existing children in path '/user/:id'
 
 除支持路径中的 wildcard 参数之外，httprouter 还可以支持 `*` 号来进行通配，不过 `*` 号开头的参数只能放在路由的结尾！
 
-
 ## 数据结构
 
 httprouter 以及很多衍生框架(如 Gin) 存储路由的数据结构是压缩字典树(Radix Tree)，类似于字典树(Trie Tree)。
 
-[字典树](../../Base/06-DataStructure&Algorithm/12A-StringMatch.md#Trie树)常用来进行字符串检索，例如用给定的字符串序列建立字典树。对于目标字符串，只要从根节点开始深度优先搜索，即可判断出该字符串是否曾经出现过，时间复杂度为 $O(n)$，n可 以认为是目标字符串的长度。
+[字典树](../../Base/06-DataStructure&Algorithm/12A-StringMatch.md#Trie 树)常用来进行字符串检索，例如用给定的字符串序列建立字典树。对于目标字符串，只要从根节点开始深度优先搜索，即可判断出该字符串是否曾经出现过，时间复杂度为 $O(n)$，n可 以认为是目标字符串的长度。
 
 普通的字典树有一个比较明显的缺点，就是每个字母都需要建立一个子节点，这样会导致字典树的层数比较深，压缩字典树相对好地平衡了字典树的优点和缺点。
 
@@ -42,6 +41,8 @@ httprouter 以及很多衍生框架(如 Gin) 存储路由的数据结构是压�
 使用压缩字典树可以减少树的层数，同时因为每个节点上数据存储也比通常的字典树要多，所以程序的局部性较好（一个节点的 path 加载到 cache 即可进行多个字符的对比），从而对CPU缓存友好。
 
 路由树创建过程见：https://books.studygolang.com/advanced-go-programming-book/ch5-web/ch5-02-router.html
+
+每一种 HTTP method 都是一棵树。
 
 # 常用框架
 

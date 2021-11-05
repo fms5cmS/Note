@@ -134,12 +134,12 @@ $ git stash list # stash list 中的内容不在了
 
 - 传输协议：
 
-| 常用协议        | 语法格式                                 | 说明                     |
-| --------------- | ---------------------------------------- | ------------------------ |
-| 本地协议 1      | `/path/to/repo.git`                      | 哑协议                   |
-| 本地协议 2      | `file://path/to/repo.git`                | 智能协议                 |
+| 常用协议          | 语法格式                                     | 说明           |
+| ------------- | ---------------------------------------- | ------------ |
+| 本地协议 1        | `/path/to/repo.git`                      | 哑协议          |
+| 本地协议 2        | `file://path/to/repo.git`                | 智能协议         |
 | http/https 协议 | `http://git-server.com/path/to/repo.git` | 平时接触到的都是智能协议 |
-| ssh 协议        | `user@git-server.com:path/to/repo.git`   | 工作中最常用的智能协议   |
+| ssh 协议        | `user@git-server.com:path/to/repo.git`   | 工作中最常用的智能协议  |
 
 哑协议在备份时没有进度的显示，而智能协议有，且智能协议传输速度更快！
 

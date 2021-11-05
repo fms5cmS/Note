@@ -355,11 +355,35 @@ Go modules 在主版本号为 v0 和 v1 的情况下省略了版本号(强制性
 | v1.0.0 | github.com/eddycjy/mquote    |
 | v2.0.0 | github.com/eddycjy/mquote/v2 |
 
-# MVS
+## MVS
 
 [Minimal Version Selection](https://research.swtch.com/vgo-mvs) 是构建 main module 时每个依赖的版本选择算法。
 
 遍历找到每个 module 最大的版本，这些版本的 module 就是满足所有需求的最小版本。 
+
+# linter
+
+codecov 可以给出测试覆盖率的报告
+
+[golangci-lint](https://golangci-lint.run/) 集成了很多的静态代码分析工具，可以对代码静态扫描检查代码规范，常见的静态代码分析工具：
+
+- errcheck：检查错误是否被处理
+- funlen：检查函数是否过长
+- bodyclose：检查 http body 是否 close
+- sqlrows：检查 sql.Rows 是否 close
+
+```shell
+golangci-lint linters # 查看所有支持的 linter
+golangci-lint -h # 帮助
+golangci-lint run # 进行静态代码检查
+golangci-lint run -h # 查看 run 的子命令帮助信息
+golangci-lint cache clean # 清除 cache
+golangci-lint cache status # 查看 cache 状态
+golangci-lint config path # 查看配置文件路径
+# 默认配置文件名为 .golangci.yaml .golangci.toml .golangci.json 三种
+```
+
+
 
 # 内存对齐
 
@@ -380,59 +404,7 @@ go install honnef.co/go/tools/cmd/structlayout-pretty
 go install honnef.co/go/tools/cmd/structlayout-optmize
 ```
 
-# Web
 
-Web 部分的内容是学习[Go 语言 Web 应用开发](https://github.com/unknwon/building-web-applications-in-go)的笔记！
-
-# 部分类库说明
-
-- `unsafe`: 包含了一些打破 Go 语言“类型安全”的命令，一般的程序中不会被使用，可用在 C/C++ 程序的调用中。
-- `syscall`、`os`、`os/exec`：
-  - `os`: 提供给我们一个平台无关性的操作系统功能接口，采用类 Unix 设计，隐藏了不同操作系统间差异，让不同的文件系统和操作系统对象表现一致。
-  - `os/exec`: 提供我们运行外部操作系统命令和程序的方式。
-  - `syscall`: 底层的外部包，提供了操作系统底层调用的基本接口。
-- `archive/tar` 和 `/zip-compress`：压缩(解压缩)文件功能。
-- `fmt`-`io`-`bufio`-`path/filepath`-`flag`:
-  - `fmt`: 提供了格式化输入输出功能。
-  - `io`: 提供了基本输入输出功能，大多数是围绕系统功能的封装。
-  - `bufio`: 缓冲输入输出功能的封装。
-  - `path/filepath`: 用来操作在当前系统中的目标文件名路径。
-  - `flag`: 对命令行参数的操作。
-- `strings`-`strconv`-`unicode`-`regexp`-`bytes`:
-  - `strings`: 提供对字符串的操作。
-  - `strconv`: 提供将字符串转换为基础类型的功能。
-  - `unicode`: 为 unicode 型的字符串提供特殊的功能。
-  - `regexp`: 正则表达式功能。
-  - `bytes`: 提供对字符型分片的操作。
-  - `index/suffixarray`: 子字符串快速查询。
-- `math`-`math/cmath`-`math/big`-`math/rand`-`sort`:
-  - `math`: 基本的数学函数。
-  - `math/cmath`: 对复数的操作。
-  - `math/rand`: 伪随机数生成。
-  - `sort`: 为数组排序和自定义集合。
-  - `math/big`: 大数的实现和计算。
-- `container`-`/list-ring-heap`: 实现对集合的操作。
-  - `list`: 双链表。
-  - `ring`: 环形链表。
-- `time`-`log`:
-  - `time`: 日期和时间的基本操作。
-  - `log`: 记录程序运行时产生的日志
-- `encoding/json`-`encoding/xml`-`text/template`:
-  - `encoding/json`: 读取并解码和写入并编码 JSON 数据。
-  - `encoding/xml`:简单的 XML1.0 解析器
-  - `text/template`:生成像 HTML 一样的数据与文本混合的数据驱动模板
-- `net`-`net/http`-`html`:
-  - `net`: 网络数据的基本操作。
-  - `http`: 提供了一个可扩展的 HTTP 服务器和基础客户端，解析 HTTP 请求和回复。
-  - `html`: HTML5 解析器。
-- `runtime`: Go 程序运行时的交互操作，例如垃圾回收和协程创建。
-- `reflect`: 实现通过程序运行时反射，让程序操作任意类型的变量。
-
-cgo：
-
-Windows 安装 GCC-64：进入[离线安装包](https://sourceforge.net/projects/mingw-w64/files/)，选择下面的 GCC 版本的链接即可开始下载，解压后将 bin 目录加入环境变量中
-
-通过 `import "C"` 语句启用 CGO 特性，同时包含 C 语言的 <stdio.h> 头文件。`go build` 命令会在编译和链接阶段启动 gcc 编译器。
 
 # 调试
 

@@ -11,7 +11,7 @@ DML 数据操纵语言，针对**表的数据**进行增删改。
 insert into table1 values(值1，值2，...)
 -- 向特定列插入多条数据
 insert into table1(column1,column2,...)
-	values(值1，值2，...)(值1，值2，...)
+    values(值1，值2，...)(值1，值2，...)
 -- 使用 set 插入数据
 insert into table1 set column1=值1，...
 ```
@@ -165,9 +165,9 @@ ALTER TABLE book_author RENAME TO author;
 
 ### 添加约束
 
-|          | 位置         | 支持的约束类型             | 是否可以起约束名     |
-| -------- | ------------ | -------------------------- | -------------------- |
-| 列级约束 | 列的后面     | 语法都支持，但外键没有效果 | 不可以               |
+|      | 位置     | 支持的约束类型       | 是否可以起约束名   |
+| ---- | ------ | ------------- | ---------- |
+| 列级约束 | 列的后面   | 语法都支持，但外键没有效果 | 不可以        |
 | 表级约束 | 所有列的下面 | 默认和非空不支持，其他支持 | 可以（主键没有效果） |
 
 ```sql
@@ -298,7 +298,7 @@ SHOW INDEX FROM stuinfo; #查看
 MySQL 不支持设置自增长的起始值，但可以通过手动插入值，设置起始值。
 
 - 创建表时设置标识列
-
+  
   ```sql
   DROP TABLE IF EXISTS tab_identity;
   CREATE TABLE tab_identity(
@@ -306,18 +306,18 @@ MySQL 不支持设置自增长的起始值，但可以通过手动插入值，�
       NAME FLOAT UNIQUE AUTO_INCREMENT,
       seat INT
   );
-
+  
   SHOW VARIABLES LIKE '%auto_increment%'; -- 查看自增长变量
   ```
 
 - 修改表时设置标识列
-
+  
   ```sql
   ALTER TABLE tan_identity MODIFY COLUMN id INT PRIMARY KEY AUTO_INCREMENT;
   ```
 
 - 修改表时删除标识列
-
+  
   ```sql
   ALTER TABLE tan_identity MODIFY COLUMN id INT PRIMARY KEY ;
   ```

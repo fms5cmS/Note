@@ -28,6 +28,10 @@
 
 快速查看，在 Windows 的应用商店下载。
 
+## SumatraPDF
+
+PDF 阅读器
+
 # Chrome 插件
 
 - AdBlock：拦截网页广告
