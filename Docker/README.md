@@ -157,6 +157,15 @@ docker run --name blog --link mysql01:mysql -p 8000:8000 blog-docker
 
 `--link` 只能解决单机容器间的关联，在分布式多机的情况下，需要通过别的方式进行连接！
 
+# 容器标准
+
+- Open Container Initiative（OCI）
+- OCI 主要定义两个规范
+  - Runtime Specification
+    - 文件系统包如何解压至硬盘，让运行时运行
+  - Image Specification
+    - 如何通过构建系统打包，生成镜像清单（Manifest）、文件系统序列化文件、镜像配置
+
 # 资源
 
 - Docker 官方英文资源

@@ -16,3 +16,4 @@ url=jdbc:mysql://localhost:3306/mybatis?serverTimezone=UTC&useSSL=false
 磁盘中 block 是有多个相邻扇区组成的，block 是操作系统读取的最小单元，如果信息能以 block 的形式聚集在一起，则只需一次 IO 读取即可，这样就能极大减少磁盘 IO 时间，这就是顺序 IO。而如果信息再一个磁道中分散在各个扇区中，或者分布在不同磁道的扇区上，就会造成随机 IO，影响性能（寻道时间是随机 IO 的主要瓶颈）。
 
 随机 IO 和顺序 IO 大概相差百倍 (随机 IO：10 ms/ page, 顺序 IO 0.1ms / page)。
+

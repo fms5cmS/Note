@@ -30,7 +30,42 @@
 
 ## SumatraPDF
 
-PDF 阅读器
+PDF 阅读器，部分设置：
+
+```jso
+MainWindowBackground = #90ee90
+EscToExit = false
+ReuseInstance = false
+UseSysColors = false
+RestoreSession = true
+TabWidth = 300
+
+FixedPageUI [
+	TextColor = #000000
+	BackgroundColor = #90ee90
+	SelectionColor = #f5fc0c
+	WindowMargin = 2 4 2 4
+	PageSpacing = 4 4
+	HideScrollbars = false
+]
+EbookUI [
+	FontName = Georgia
+	FontSize = 15
+	TextColor = #5f4b32
+	BackgroundColor = #90ee90
+	UseFixedPageUI = false
+]
+```
+
+## 零散
+
+GoldWave 音频处理工具
+
+Capture 录屏工具，需要下载 ffmpeg
+
+MediaCoder 视频处理
+
+ScreenToGif 、FastStone 
 
 # Chrome 插件
 
