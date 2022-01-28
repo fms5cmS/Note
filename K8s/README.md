@@ -1,8 +1,14 @@
 极客时间[《深入剖析 Kubernetes》](https://time.geekbang.org/column/article/14642) 学习笔记。
 
 容器可分为两部分：
-- 一组联合挂载在 /var/lib/docker/overlay2 上的 rootfs，这一部分称为“容器镜像”（Container Image），是容器的静态视图；
-- 一个由 Namespace+Cgroups 构成的隔离环境，这一部分称为“容器运行时”（Container Runtime），是容器的动态视图。
+- 一组联合挂载在 /var/lib/docker/overlay2 上的 rootfs，称为“容器镜像”（Container Image），是容器的静态视图；
+- 一个由 Namespace+Cgroups 构成的隔离环境，称为“容器运行时”（Container Runtime），是容器的动态视图。
+
+容器标准 Open Container Initiative（OCI）主要定义三个规范
+
+- Runtime Specification 运行时标准：文件系统包如何解压至硬盘并运行
+- Image Specification 镜像标准：如何通过构建系统打包，生成镜像清单（Manifest）、文件系统序列化文件、镜像配置
+- Distribution Specification 分发标准：如何分发容器镜像
 
 很多的集群管理项目(如 Yarn、Mesos，以及 Swarm)所擅长的，都是把一个容器，按照某种规则，放置在某个最佳节点上运行起来。这种功能称为“调度”；
 

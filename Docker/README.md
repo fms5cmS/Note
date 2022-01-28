@@ -88,6 +88,7 @@ docker image old_image:old_tag  new_image:new_tag
 # "-p 主机端口:容器内部端口" 将主机端口映射到容器内部端口
 # "-i" 以交互模式
 # "-t" 为容器重新分配一个伪输入终端，通常和 "-i" 一起使用
+# "-v" 磁盘挂载
 docker run 镜像名:tag
 # 当使用交互模式时，使用 exit 停止并退出容器
 exit
@@ -99,6 +100,8 @@ Ctrl+P+Q
 # "-q" 静默模式，只显示容器编号
 # "-l" 最近创建的容器
 docker ps
+# 查看容器内部细节！！！
+docker inspect 容器id
 # 停止当前运行的容器
 docker stop 容器名或容器id
 # 强制停止容器
@@ -128,8 +131,6 @@ docker run -d -p 6379:6379 --name myredis redis
 docker logs 容器名或容器id
 # 查看容器内进程
 docker top 容器id
-# 查看容器内部细节
-docker inspect 容器id
 # 进入正在运行的容器并以命令行交互，直接进入容器启动命令的终端，但不会启动新的进程
 docker attach 容器id
 # 进入正在运行的容器并以命令行交互，在容器中打开新的终端，且可以启动新的进程（如果不加 "bash命令"，会打开新的终端，如果加了则直接返回 "bash命令" 的结果而不打开新的终端）
@@ -156,15 +157,6 @@ docker run --name blog --link mysql01:mysql -p 8000:8000 blog-docker
 ```
 
 `--link` 只能解决单机容器间的关联，在分布式多机的情况下，需要通过别的方式进行连接！
-
-# 容器标准
-
-- Open Container Initiative（OCI）
-- OCI 主要定义两个规范
-  - Runtime Specification
-    - 文件系统包如何解压至硬盘，让运行时运行
-  - Image Specification
-    - 如何通过构建系统打包，生成镜像清单（Manifest）、文件系统序列化文件、镜像配置
 
 # 资源
 
