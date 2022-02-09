@@ -98,3 +98,26 @@ Beego 使用 github.com/astaxie/beego/logs 包来完成日志功能。
   logs.Trace("trace-2")
   logs.Info("info-2")
 ```
+
+
+
+# 中间件
+
+统计接口耗时：
+
+```go
+func timeMiddleware(next http.Handler) http.Handler {
+	// 这里要做类型转换！
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, req)
+		slog.GLogger.Info("cost: %fs", time.Since(start).Seconds())
+	})
+}
+```
+
+```go
+beego.RunWithMiddleWares(fmt.Sprintf(":%d", *port), timeMiddleware)
+```
+
+除了采用中间件的形式，也可以利用 beego 默认 Controller 自带的 `Prepare()`和 `Finish()` 函数，将请求到达的时间存储在 context 中，再在 `Finish()` 中取出来计算耗时
