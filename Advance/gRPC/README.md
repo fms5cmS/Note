@@ -41,10 +41,10 @@ gRPC 与 Go 标准库的 RPC 框架不同，gRPC生成的接口并不支持异�
 
 RPC 是远程函数调用，所以每次调用的函数参数、返回值不能太大，否则会严重影响每次调用的响应时间。传统 RPC 模式也不适用于对时间不确定的订阅和发布模式。为此，gRPC 框架针对服务器端和客户端分别提供了流特性。
 
-导入库：
-
 ```shell
-go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
+go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
+# 项目中导入库
 go get -u google.golang.org/grpc
 ```
 
@@ -125,13 +125,13 @@ func main() {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
-	
+
 	// 基于已建立的连接构造客户端对象
 	c := protos.NewGreeterClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	// 调用 gRPC 服务提供的方法
-	reply, err := c.SatHello(ctx, &protos.HelloRequest{Name: "fms5cmS"})
+	reply, err := c.SayHello(ctx, &protos.HelloRequest{Name: "fms5cmS"})
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}

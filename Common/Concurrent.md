@@ -47,7 +47,7 @@ IPC（Inter-Process Communication）方法：
 
 在 Linux 系统下，使用 `kill -l` 可以发现，Linux 共支持 62 种信号（编号为 32、33 的信号不存在） ，其中 1~31 的信号为标准信号（不可靠信号），34~64 的信号为实时信号（可靠信号）。
 
-- ctrl + c：发出 SIFINT 信号，强制进程结束
+- ctrl + c：发出 SIGINT 信号，强制进程结束
 - ctrl + z：发出 SIGTSTP 信号，任务中断，进程挂起
 - ctrl + \：发出 SIGQUIT 信号，进程结束和 dump core
 - ctrl + d：EOF

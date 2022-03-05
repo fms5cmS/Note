@@ -4,12 +4,14 @@ proto3 的语法详见[官网](https://developers.google.com/protocol-buffers/do
 
 # protoc
 
+https://grpc.io/docs/languages/go/quickstart/
+
 - 安装 Protobuf 编译器，即 [protoc 工具](https://github.com/protocolbuffers/protobuf/releases)，下载后解压，并在 PATH 环境变量中添加其 bin 目录；
 - 安装针对 [Go 的 Protobuf 代码生成插件](https://developers.google.com/protocol-buffers/docs/reference/go-generated)：
 
 ```shell
-go get -u github.com/golang/protobuf/protoc-gen-go
-go install github.com/golang/protobuf/protoc-gen-go
+go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
 ```
 
 protoc 编译器是通过插件机制实现对不同语言的支持，如 `protoc` 命令出现了 `--xxx_out` 格式的参数，就会先查询是否有内置的 xxx 插件，如果没有内置的 xxx 插件，就会继续查询当前系统中是否存在 protoc-gen-xxx 命名的可执行程序，最终通过查询到的插件生成代码。

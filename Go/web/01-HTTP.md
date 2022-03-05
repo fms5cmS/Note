@@ -148,39 +148,41 @@ func main() {
 
 如果暴力地停止服务，那么已经发送给服务端的请求，来不及处理服务就被删掉了，就会造成这部分请求失败，服务就会有波动。所以服务在退出的时候，都需要先停掉流量再停止服务，这样服务的关闭才会更平滑。比如，消息队列处理器就是要将所有已经从消息队列中读出的消息，处理完之后才能退出。
 
-开源社区提供了多种优雅停止的方案，如 facebookgo/grace。从 Go 1.8 开始，标准库开始支持原生的优雅停止方案，但必须使用自定义的 `http.Server` 对象，因为对应的 `Close()` 方法无法通过其它途径调用。
+开源社区提供了多种优雅停止的方案，如 facebookgo/grace。从 Go 1.8 开始，标准库开始支持原生的优雅停止方案，但必须使用自定义的 `http.Server` 对象，因为对应的 `Shutdown()` 方法无法通过其它途径调用。
 
 ```go
 func main() {
 	mux := http.NewServeMux()
-	mux.Handle("/", &HelloHandler{})
+	mux.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(10 * time.Second)
+		w.Write([]byte("this is response for test"))
+	})
 	server := &http.Server{
-		Addr:    ":4000",
+		Addr:    ":8080",
 		Handler: mux,
 	}
 
-	quit := make(chan os.Signal)
-	signal.Notify(quit,os.Interrupt)
 	go func() {
-		<- quit
-		if err:=server.Close();err!=nil{
-			log.Fatal("Close server:", err)
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("listenAndServe failed: %v", err)
 		}
 	}()
-	log.Println("Starting HTTP server...")
-	err := server.ListenAndServe()
-	if err != nil {
-		if err == http.ErrServerClosed {
-			log.Print("Server closed under request")
-		} else {
-			log.Fatal("Server closed unexpected")
-		}
+	// 等待中断信号
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutdown server...")
+	// 最大时间控制，通知该服务端它有 5s 的时间处理原有的请求
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown: ", err)
 	}
+	log.Println("Server exiting")
 }
-// HelloHandler 的代码...
 ```
 
-程序会捕捉 `os.Interrupt`(Ctrl+C)信号，然后调用 `Close()` 方法告知服务器应停止接受新的请求并在处理完当前已接受的请求后关闭服务器。
+程序会捕捉 `os.Interrupt`(Ctrl+C)信号，然后调用 `Shutdown()` 方法告知服务器应停止接受新的请求并在处理完当前已接受的请求后关闭服务器。
 
 标准库提供了一个特定的错误类型 `http.ErrServerClosed`，可用它判断确定服务器是正常关闭的还是意外关闭的。
 

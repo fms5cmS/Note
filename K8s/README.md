@@ -12,7 +12,7 @@
 
 很多的集群管理项目(如 Yarn、Mesos，以及 Swarm)所擅长的，都是把一个容器，按照某种规则，放置在某个最佳节点上运行起来。这种功能称为“调度”；
 
-Kubernetes 项目擅长的是按照用户的意愿和整个系统的规则，完全自动化地处理好容器之间的各种关系。这种功能就是**编排**。
+Kubernetes 项目可以按照用户的意愿和整个系统的规则，完全自动化地处理好容器之间的各种关系。这种功能就是**编排**。
 
 Kubernetes 是一个自动化的容器编排平台，核心功能：
 - 服务发现与负载均衡
@@ -216,6 +216,8 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # 将一个Node节点加入到当前集群中，在 worker 节点中执行的
 kubeadm join 192.168.1.5:6443 --token etfhmx.idof4kx7ealogg3k --discovery-token-ca-cert-hash sha256:de1d693bc723009bb629eb43aa62b70324cdb1a945cdfaa4d956d624a5460095
+# 如果没有记下该命令，可以使用下面的命令查看
+kubeadm token create --print-join-command
 ```
 
 ## 部署网络插件
@@ -395,6 +397,11 @@ kubectl replace -f nginx-deployment.yaml
 # kubectl 命令
 
 ```shell
+# 指定 namespace 进行其他操作
+kubectl -n 指定namespace 其他操作
+kubectl -n kube-system get pods # 获取 kube-syatem namespace 下的pod
+kubectl -n kube-system exec -it etcd-vm210 sh # 进入 kube-syatem namespace 下的 etcd-vm210
+
 # 创建 API 对象
 kubectl create -f xx.yaml
 # 更新镜像
@@ -403,6 +410,7 @@ kubectl replace -f xxx.yaml
 kubectl apply -f xx.yaml
 
 # kubectl get 指令用于从 Kubernetes 中获取指定的 API 对象
+# 指
 # -l 用于获取所有匹配指定标签的 API 对象
 kubectl get pods -l app=nginx  # 检查该 yaml 文件运行后的状态
 # 将指定的 API 对象以 yaml 方式展示，如：kubectl get configmaps ui-config -o yaml
