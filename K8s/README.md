@@ -205,6 +205,12 @@ kubeadm reset
 kubeadm init --config xxx.yaml --v=6
 ```
 
+也可以使用
+
+```shell
+kubeadm init --image-repository registry.aliyuncs.com/google_containers --kubernetes-version v1.23.0 --apiserver-advertise-address=192.168.56.200（这是主机IP） --pod-network-cidr=192.168.1.0/16
+```
+
 执行完成后会有以下提示：
 
 ```shell
