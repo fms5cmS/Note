@@ -14,6 +14,12 @@ go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.26
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.1
 ```
 
+注意：对于 protoc-gen-go，如果是从 google 下载的话，是不支持 grpc 插件的！！！会报错：
+
+> --go_out: protoc-gen-go: plugins are not supported
+
+可以使用 github 下载的，`go install github.com/golang/protobuf/protoc-gen-go@v1.4.2`
+
 protoc 编译器是通过插件机制实现对不同语言的支持，如 `protoc` 命令出现了 `--xxx_out` 格式的参数，就会先查询是否有内置的 xxx 插件，如果没有内置的 xxx 插件，就会继续查询当前系统中是否存在 protoc-gen-xxx 命名的可执行程序，最终通过查询到的插件生成代码。
 
 针对 Go 语言的 protoc-gen-go 插件，里面又实现了一层静态插件系统，如内置的 gRPC 插件，可通过 `--go_out=plugins=grpc` 参数生成 gRPC 相关代码，否则只会针对 message 生成相关代码。

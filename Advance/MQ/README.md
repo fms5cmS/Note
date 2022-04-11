@@ -1,22 +1,5 @@
 [消息队列](../Architecture/03-消息队列.md)
 
-# 引入MQ后如何高可用
-
-RabbitMQ的高可用：基于主从做高可用性的。RabbitMQ 有三种模式：
-- 单机
-- 普通集群：在多台机器上启动多个RabbitMQ实例，每个机器启动一个。但是你、创建的queue，只会放在一个RabbitMQ实例上，每个实例都同步queue的元数据。消费时，如果连接到了另外一个实例，那么那个实例会从queue所在实例上拉取数据过来。获取数据的两种方式：
-  - 消费者每次随机连接一个实例然后拉取数据==>数据拉取的开销
-  - 固定连接那个queue所在实例消费数据==>导致单实例性能瓶颈
-- 镜像集群：创建的queue，无论元数据还是queue里的消息都会存在于多个实例上，然后每次写消息到queue的时候，都会自动把消息到多个实例的queue里进行消息同步。
-  - 性能开销大，消息同步所有机器，导致网络带宽压力和消耗很重；
-  - 开启：在管理控制台新增一个镜像集群模式的策略。指定的时候可以要求数据同步到所有节点的，也可以要求就同步到指定数量的节点，然后你再次创建queue的时候，应用这个策略，就会自动将数据同步到其他的节点上去了。
-
-
-
-# 保证消息顺序性
-
-RabbitMQ：拆分多个queue，每个queue一个consumer，就是多一些queue而已，确实是麻烦点；或者就一个queue但是对应一个consumer，然后这个consumer内部用内存队列做排队，然后分发给底层不同的worker来处理
-
 # 对比多款MQ
 
 以下四种 MQ 都支持消息事务，客户端将信道设置为事务模式，只有当消息被rabbitMq接收，事务才能提交成功，否则在捕获异常后进行回滚。使用事务会使得性能有所下降。
@@ -59,15 +42,4 @@ RabbitMQ：拆分多个queue，每个queue一个consumer，就是多一些queue�
 | Model        | 提供两种消息模型：<br/>Peer-2-Peer（点对点）<br/>Pub/sub（发布订阅）                                                            | 提供了五种消息模型：<br/>direct   exchange（点对点） <br/>fanout   exchange（发布订阅） <br/>topic   change（发布订阅）<br/>headers   exchange（发布订阅）<br>system   exchange（发布订阅）<br/>本质来讲，后四种和JMS的pub/sub模型没有太大差别，仅是在路由机制上做了更详细的划分 |
 | 支持消息类型 | 多种消息类型：   TextMessage   MapMessage   BytesMessage   StreamMessage   ObjectMessage   Message   （只有消息头和属性）       | byte[]   当实际应用时，有复杂的消息，可以将消息序列化后发送。                                                                                                                                                                                                                    |
 | 综合评价     | JMS   定义了JAVA   API层面的标准；在java体系中，多个client均可以通过JMS进行交互，不需要应用修改代码，但是其对跨平台的支持较差； | AMQP定义了wire-level层的协议标准；天然具有跨平台、跨语言特性。                                                                                                                                                                                                                   |
-
-- Spring支持：
-  - spring-jms提供了对JMS的支持
-  - spring-rabbit提供了对AMQP的支持
-  - 需要`ConnectionFactory`的实现来连接消息代理
-  - 提供`JmsTemplate`、`RabbitTemplate`来发送消息
-  - `@JmsListener`（JMS）、`@RabbitListener`（AMQP）注解在方法上监听消息代理发布的消息
-  - `@EnableJms`、`@EnableRabbit`开启支持
-- SpringBoot自动配置
-  - `JmsAutoConfiguration`
-  - `RabbitAutoConfiguration`
 
