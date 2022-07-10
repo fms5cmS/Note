@@ -1,5 +1,8 @@
 
-Apache Kafka 是消息引擎系统，也是一个分布式流处理平台（Distributed Streaming Platform）！
+Apache Kafka 是消息引擎系统，也是一个分布式流处理平台（Distributed Streaming Platform）！其在设计之初旨在提供三个方面的特性：
+- 提供一套 API 实现生产者和消费者
+- 降低网络传输和磁盘存储开销
+- 实现高伸缩性架构
 
 Kafka 会将结构化的消息（Record）转换成**二进制的字节序列**来进行传输。
 
