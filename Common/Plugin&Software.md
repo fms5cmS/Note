@@ -67,6 +67,12 @@ MediaCoder 视频处理
 
 ScreenToGif 、FastStone 
 
+# MacBook
+
+AIfred、MacZip（压缩）、Omi（录屏）、iTerm（终端）、PDF Reader X、Snipaste（屏幕截图）
+
+BloomRPC（可视化 RPC 接口调用）、Fork（可视化版本控制工具）
+
 # Chrome 插件
 
 - AdBlock：拦截网页广告
