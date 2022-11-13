@@ -34,9 +34,12 @@ HTTP 请求的状态：
 
 工作在 OSI 二层（数据链路层）的网络设备为交换机，工作在 OSI 三层（网络层）的设备为路由器。
 
-工作在 OSI 四层（传输层）的负载均衡器（如 LVS）可以将 Client 传过来的 TCP 报文以第二条 TCP 连接的方式转发给 Server，对于 UDP 会话也可以这样。四层负载均衡不会解析 TCP、UDP 上承载的应用层协议。
+工作在 OSI 四层（传输层）的负载均衡器（如 LVS）可以解析到 TCP/UDP 层，将 Client 传过来的 TCP 报文以第二条 TCP 连接的方式转发给 Server，对于 UDP 会话也可以这样。四层负载均衡不会解析 TCP、UDP 上承载的应用层协议。
 
-工作在 OSI 七层（应用层）的负载均衡器可以进行协议转换，示例：
+许多四层负载均衡还会解析到表示层 TLS，既可以忽略 TLS，将 TCP 协议原封不动发送到上游服务，也可以在四层负载均衡配置证书以及解析 TLS 的方法，卸载或包一层 TLS。
+
+
+工作在 OSI 七层（应用层）的负载均衡器可以解析到应用层协议，进行协议转换，示例：
 1. Client 通过 HTTP/1.1 发送请求，假设 Server 不支持 HTTP/1.1，负载均衡器可以将请求转换为 HTTP/1.0 来连接 Server；
 2. Client 通过 HTTP/1.1 + TLS 发送请求，假设 负载均衡到 Server 是基于企业内网的，其本身就是安全的，负载均衡器会剥离 TLS 协议，还可以将 HTTP/1.1 转换为更为高效的协议，如 uwsgi
 3. Client 通过 HTTP/2 发送请求，假设 Server 不支持 HTTP/2，负载均衡器可以将请求转为 HTTP/1.1，如果 Server 是在外网部署的，还会加上 TLS
@@ -150,6 +153,32 @@ HTTPS和HTTP的区别主要如下：
 - HTTP是超文本传输协议，信息是明文传输，HTTPS则是具有安全性的ssl加密传输协议。
 - HTTP和HTTPS使用的是完全不同的连接方式，用的端口也不一样，前者是80，后者是443。
 - HTTP的连接很简单，是无状态的；HTTPS协议是由SSL+HTTP协议构建的可进行加密传输、身份认证的网络协议，比HTTP协议安全。
+
+# BPF
+
+Expression 表达式
+
+primitives 原语:由名称或数字，以及描述它的多个限定词组成
+限定词：
+- Type，设置数字或者名称所指示类型
+  - host、port
+  - net ，设定子网。如 net 192.168.0.0 mask 255.255.255.0 等价于 net 192.168.0.0/24
+  - portrange，设置端口范围，如 portrange 6000-8000
+- Dir，设置网络出入方向，如 dst port 80
+  - 主要是 src（出）、dst（入）
+- Proto，指定协议类型，如 udp
+- 其他
+  - gateway，指明网关 IP 地址，等价于 ether host ehost and not host host
+  - broadcast，广播报文，例如 ether broadcast 或者 ip broadcast
+  - multicast，多播报文，例如 ip multicast 或者 ip6 multicast
+  - less, greater，小于或者大于
+
+运算符：
+- 与，&& 或 and
+- 或，|| 或 or
+- 非，! 或 not
+
+Wireshark 或 tcpdump 中会使用到的过滤表达式
 
 # 代理
 
