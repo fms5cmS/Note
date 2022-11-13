@@ -32,6 +32,19 @@ HTTP 请求的状态：
 
 ![](../../images/osi-tcp_model.png)
 
+工作在 OSI 二层（数据链路层）的网络设备为交换机，工作在 OSI 三层（网络层）的设备为路由器。
+
+工作在 OSI 四层（传输层）的负载均衡器（如 LVS）可以将 Client 传过来的 TCP 报文以第二条 TCP 连接的方式转发给 Server，对于 UDP 会话也可以这样。四层负载均衡不会解析 TCP、UDP 上承载的应用层协议。
+
+工作在 OSI 七层（应用层）的负载均衡器可以进行协议转换，示例：
+1. Client 通过 HTTP/1.1 发送请求，假设 Server 不支持 HTTP/1.1，负载均衡器可以将请求转换为 HTTP/1.0 来连接 Server；
+2. Client 通过 HTTP/1.1 + TLS 发送请求，假设 负载均衡到 Server 是基于企业内网的，其本身就是安全的，负载均衡器会剥离 TLS 协议，还可以将 HTTP/1.1 转换为更为高效的协议，如 uwsgi
+3. Client 通过 HTTP/2 发送请求，假设 Server 不支持 HTTP/2，负载均衡器可以将请求转为 HTTP/1.1，如果 Server 是在外网部署的，还会加上 TLS
+
+七层负载均衡可以解析出 header、body 等 message 中的各种信息，所以 WAF（Web Application Firewall）防火墙是可以天然放在七层负载均衡中的。
+
+七层负载均衡通常还有缓存功能，因为它解析出了 header、body 等内容，就可以在七层负载均衡做一层缓存。
+
 # HTTP 消息格式
 
 基于 [ABNF](https://www.ietf.org/rfc/rfc5234.txt) 描述的 HTTP 协议格式：HTTP-message = `start-line *(header-field CRLF)CRLF [message-body]`
