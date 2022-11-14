@@ -17,3 +17,6 @@ url=jdbc:mysql://localhost:3306/mybatis?serverTimezone=UTC&useSSL=false
 
 随机 IO 和顺序 IO 大概相差百倍 (随机 IO：10 ms/ page, 顺序 IO 0.1ms / page)。
 
+# 备注
+
+在代码块中前面带 `$` 的为输入的命令，不带的为输出结果！
