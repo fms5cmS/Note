@@ -36,3 +36,6 @@ SCTP：Stream Control Transmission Protocol 流控制传输协议
 
 在没有发生错误的情况下，系统调用 socket 会返回一个 `int` 类型的值，该值是作为 socket 唯一标识符的文件描述符。得到该标识符号，就可以调用其他系统调用来进行各种相关操作了，如绑定、监听端口、发送/接收数据、关闭 Socket 实例等。
 
+![网络编程中的TCP核心逻辑](../images/socket-TCP.jpg)
+
+![网络编程中的UDP核心逻辑](../images/socket-UDP.jpg)
