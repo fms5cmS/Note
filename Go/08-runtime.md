@@ -37,7 +37,7 @@ package main
 imoprt "runtime"
 
 func main() {
-    runtime.MAXGOPROCS(1)
+    runtime.GOMAXPROCS(1)
     for i := 0; i < 9; i++ {
         i := i 
         go func() {
@@ -74,7 +74,7 @@ func main() {
     - top 流程：
     - runtime.runqget 再次从本地队列获取
     - 没获取到，runtime.globalrunqget 加锁从全局队列获取
-      - runtime.globalrunqget 会从全局队列拿 total/gomaxprocs + 1 个 G，但不能超过 128（local runnable queue 的一半），头部的 G 用于接下来执行，其他的会放入 lcaol runnable queu
+      - runtime.globalrunqget 会从全局队列拿 total/gomaxprocs + 1 个 G，但不能超过 128（local runnable queue 的一半），头部的 G 用于接下来执行，其他的会放入 local runnable queue
     - 没获取到，runtime.netpoll 从网络中获取（会是一个列表）
       - 如果获取到的话会执行并将其加锁放入全局队列中
     - 没获取到，runtime.runqsteal 从其他的 P 偷 local run queue 尾部的一半 g 回来放入本地队列
