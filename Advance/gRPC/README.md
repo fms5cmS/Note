@@ -139,11 +139,9 @@ func main() {
 }
 ```
 
+# Question
 
+Q：gRPC 为什么是基于 HTTP/2 协议的？
 
-
-
-
-
-
+许多客户端要通过 HTTP 代理来访问网络，gRPC 全部使用 HTTP/2 实现，等到代理开始支持 HTTP/2 后就能透明转发 gRPC 数据。而且负责负载均衡等的反响代理也能无缝兼容 gRPC 了。
 
