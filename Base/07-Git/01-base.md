@@ -33,6 +33,10 @@ git config --global user.email ‘邮箱’
 git config --local # 只对某个仓库有效，缺省等同于 local
 git config --global # 对当前用户的所有仓库有效
 git config --system # 对系统所有登录的用户有效
+
+# 本地连有 VPN 时，7890为本地混合配置的端口号，配置以下代理
+git config --global http.proxy http://127.0.0.1:7890
+git config --global https.proxy http://127.0.0.1:7890
 ```
 
 如何显示 config 的配置？加上 `--list`，去如：`git config --list --system`
