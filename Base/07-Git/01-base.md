@@ -25,6 +25,9 @@ git diff HEAD HEAD^1
 # 配置 user 信息
 git config --global user.name ’用户名‘
 git config --global user.email ‘邮箱’
+
+# 在 Git 中把非 ASCII 字符叫做 Unusual 字符。这类字符在 Git 输出到终端的时候默认是用 8 进制转义字符输出的（以防乱码），但现在的终端多数都支持直接显示非 ASCII 字符，所以需要关闭掉这个特性！
+git config --global core.quotepath off
 ```
 
 上面使用 `git config` 配置时使用了 `--global` 参数，config 共有三个作用域：
