@@ -102,4 +102,23 @@ DeFi 应用会面临多种风险攻击：
 
 # 名词
 
-TVL-Total Value Locked 总锁仓价值
+DLT，Distributed Ledger Technology 分布式记账
+
+DAO，Decentralized Autonomous Organization
+
+TVL，Total Value Locked 总锁仓价值
+
+AMM，Automated Market Makers 自动做市商
+
+LP，Liquidity Provider 流动性提供者
+
+链的种类根据参与者的不同，可以分为
+- 公有链（Public 或 Permissionless），任何人都可以参与使用和维护，参与者多为匿名
+- 联盟链（Consortium 或 Permissioned），由若干组织一起合作（如供应链机构或银行联盟等）维护一条区块链，该区块链的使用必须是带有权限的限制访问，相关信息会得到保护，典型如超级账本项目
+- 私有链（Private），由集中管理者进行管理限制，只有内部少数人可以使用，信息不公开。一般认为跟传统中心化记账系统的差异不明显
+
+> 在架构上，现有大部分区块链在实现都至少包括了网络层、共识层、智能合约和应用层等分层结构，联盟链实现往还会引入额外的权限管理机制。
+
+# Reference
+
+[区块链技术指南](https://github.com/yeasy/blockchain_guide)
