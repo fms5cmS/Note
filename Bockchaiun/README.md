@@ -102,6 +102,10 @@ DeFi 应用会面临多种风险攻击：
 
 # 名词
 
+KYC，Know-Your-Customer
+
+AML，Anti-Money Laundering 反洗钱
+
 DLT，Distributed Ledger Technology 分布式记账
 
 DAO，Decentralized Autonomous Organization
