@@ -136,7 +136,7 @@ Casper 共识属于 PoS 权益证明算法。
 
 # ERC
 
-[ERC(Ethereum Request for Comments)](https://eips.ethereum.org/erc) 标准定义了一套 Ethereum 区  Token 的标准。块链上用于创建和管理的规则。
+[ERC(Ethereum Request for Comments)](https://eips.ethereum.org/erc) 标准定义了一套 Ethereum Token 的标准。是区块链上用于创建和管理的规则。
 
 > 所有 ERC 标准都需要通过 EIP(Ethereum Improvement Proposals，以太坊改进方案)进行修订，最后社区讨论共同决定
 
@@ -156,6 +156,8 @@ Casper 共识属于 PoS 权益证明算法。
   - 传统上，创建管理多种类型代币的 dApp 需要为每种类型制定单独的智能合约，这可能很麻烦且效率低下，且会在以太坊区块链上放置大量冗余字节码，且随着 gameFi 的兴起，游戏开发者可能会一次性创建数以千计的 Token。借助 ERC-1155，开发人员可以创建一个管理可替代和不可替代代币的智能合约，从而降低 dApp 的整体复杂性。
   - ERC-1155 的另一个优点是它允许创建“半同质”代币。这些代币具有一些可替代和不可替代的属性。例如，一个游戏物品可能具有一组该物品独有的属性（使其不可替代），但也具有一组在多个物品之间共享的属性（使其可替代）。这使得管理游戏内物品变得更加容易，并为游戏开发者提供了更大的灵活性。
   - ERC-1155 还支持“批量转账”，允许在一次交易中转账多个代币。这可以在转移大量代币时降低 gas 成本并提高整体效率。
+- [ERC-4626](https://eips.ethereum.org/EIPS/eip-4626)，资产池，接受 ERC20 资产，给出对应的凭证
+  - 用户可以存入资产获取凭证(deposit)，可用凭证取回资产(withdraw)
 
 Reference：
 
